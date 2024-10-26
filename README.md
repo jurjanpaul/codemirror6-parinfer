@@ -6,7 +6,7 @@ Getting there, but this is still very much a work in progress!
 
 (Nowhere near a published library yet though.)
 
-Try it at https://jurjanpaul.github.io/codemirror6-parinfer/.
+Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [Nextjournal's Clojure syntax support](https://github.com/nextjournal/lang-clojure)).
 
 
 ## Motivation
@@ -28,5 +28,7 @@ Honestly though: Parinfer has a simple API, so this should not be rocket science
 - [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
 - [ ] Extend README
 - [ ] Maybe mark parentrail
+- [ ] Examine interaction with other CodeMirror extension
 - [ ] Make into a published JS library
   - [ ] Options to configure/toggle
+- [ ] Optimise
