@@ -28,7 +28,7 @@ Honestly though: Parinfer has a simple API, so this should not be rocket science
 - [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
 - [ ] Extend README
 - [ ] Maybe mark parentrail
-- [ ] Examine interaction with other CodeMirror extension
+- [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
   - [ ] Options to configure/toggle
 - [ ] Optimise
