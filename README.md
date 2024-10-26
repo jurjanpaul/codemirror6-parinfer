@@ -4,7 +4,7 @@ Combines [Parinfer](https://shaunlebron.github.io/parinfer/) with [CodeMirror 6]
 
 Getting there, but this is still very much a work in progress, nowhere near a published library.
 
-Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [Nextjournal's Clojure syntax support](https://github.com/nextjournal/lang-clojure)).
+Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [Nextjournal's Clojure syntax support for CodeMirror 6](https://github.com/nextjournal/lang-clojure)).
 
 
 ## Motivation
