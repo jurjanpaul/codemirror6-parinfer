@@ -6,6 +6,9 @@ Getting there, but this is still very much a work in progress!
 
 (Nowhere near a published library yet though.)
 
+Try it at https://jurjanpaul.github.io/codemirror6-parinfer/.
+
+
 ## Motivation
 Ever since I started coding in Clojure (coming from years of programming in Python), I never got rid of my addiction to Parinfer. I understand, in theory, why Clojure programmers are encouraged to work with the particular flavour of Paredit that is available for their editor of choice: editing on the exact  level of the forms that make up the program. Even so, I never managed, nor tried hard enough probably, to get those keybindings into finger memory and have my editing mind 'feel' the code in front of me as different than just lines that need to be manipulated (added, deleted, split, combined, indented, deindented).
 
