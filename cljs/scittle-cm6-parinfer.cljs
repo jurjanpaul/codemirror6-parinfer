@@ -4,6 +4,7 @@
 ;; - Parinfer smartmode
 ;;
 ;; Does not (yet) support:
+;; - error highlighting
 ;; - importing as library
 ;; - turning off parinfer or switching to other modes
 
