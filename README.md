@@ -10,7 +10,7 @@ Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [N
 - [x] `smartMode` Parinfer
 - [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
 - [ ] Extend README
-- [ ] Maybe mark parentrail
+- [ ] Maybe mark `parenTrails`
 - [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
   - [ ] Options to configure/toggle
