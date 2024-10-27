@@ -17,7 +17,7 @@ Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [N
 - [ ] Optimise
 
 ## Motivation
-If I ever hope to upgrade the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) from CodeMirror 5 to CodeMirror 6, I need Parinfer integration, which nobody seems to have made available for CodeMirror 6 yet.
+If I ever hope to upgrade the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) from CodeMirror 5 to CodeMirror 6, I need Parinfer integration, which nobody seems to have made available for CodeMirror 6 yet. (This is noteworthy because Parinfer was originally developed on CodeMirror and version 6, a complete rewrite, has been out for a number of years now.)
 
 But even if that upgrade never happens, I hope that this may be a small contribution/inspiration to keeping Parinfer a viable option for editing Clojure/Lisp across as many different editor(component)s as possible, because I heavily depend on its integration in other editors. 🙂
 
