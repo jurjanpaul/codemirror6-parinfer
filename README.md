@@ -9,12 +9,11 @@ Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [N
 ## TODO
 - [x] `smartMode` Parinfer
 - [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
-- [ ] Extend README
 - [ ] Maybe mark `parenTrails`
 - [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
   - [ ] Options to configure/toggle
-- [ ] Optimise
+- [ ] Optimise?
 
 ## Motivation
 If I ever hope to upgrade the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) from CodeMirror 5 to CodeMirror 6, I need Parinfer integration, which nobody seems to have made available for CodeMirror 6 yet. (This is noteworthy because Parinfer was originally developed on CodeMirror and version 6, a complete rewrite, has been out for a number of years now.)
@@ -26,5 +25,9 @@ But even if that upgrade never happens, I hope that this may be a small contribu
 Honestly though: Parinfer has a simple API, so this should not be rocket science. CodeMirror 6 though seems/seemed rather complex compared to the CodeMirror 5 API...
 
 ## Experience so far
-...
 
+* Interesting that [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) is the hook needed to 'add' synchronous Parinfer modifications to a user triggered state transaction. (I overlooked it at first, because filtering means something else in the contexts that I am used to.)
+* The documentation for [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) clearly states that it is recommended to avoid accessing `Transaction.state` in a filter, but I am finding that I need to do that twice (!) in the same invocation to be able to translate CodeMirror positions to Parinfer coordinates and vice versa.
+* I had learned from [this CodeMirror discussion thread](https://discuss.codemirror.net/t/implement-parinfer-with-snippets/3549/2) that it would probably be a good idea to diff the Parinfer output with its input. I am now indeed doing that, using the [diff-match-patch](https://github.com/google/diff-match-patch) library.
+* All in all, a lot of expensive transformations need to happen for each key press... Even so, the result feels fast enough, even with a large code base on a phone.
+* I wonder if the same result may after all be achieved with less expensive steps, but I'll take (relatively) 'slow' over asynchronous postprocessing any day, having experienced how poorly that works out when an editor provides no alternative.

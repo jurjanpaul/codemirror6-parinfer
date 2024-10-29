@@ -20,7 +20,6 @@
 
 (defn parinfer-yx->cm-pos
   [doc y x]
-  ;; (println "line from" (.-from (.line doc (inc y))))
   (+ (.-from (.line doc (inc y))) x))
 
 (defn cm-changeset->parinfer-changes
@@ -91,19 +90,14 @@
     (if (not (.-success result))
       {} ; TODO: pass and show error somehow
       (let [cursorX (.-cursorX result)
-            ;; _ (println "pi x" cursorX)
             cursorLine (.-cursorLine result)
-            ;; _ (println "pi y" cursorLine)
             changes (parinfer-result->cm-changes result new-text)
-            ;; _ (println "changes" changes)
             new-transaction (.update new-state
                                      (clj->js {:changes changes
                                                :filter false}))
-            ;; new-new-text (.toString (.-doc (.-state new-transaction)))
-            ;; _ (println "new-new-text:" (str "\n" new-new-text))
-            ;; new-doc is not exactly the final doc!?
-            new-pos (parinfer-yx->cm-pos (.-doc (.-state new-transaction)) cursorLine cursorX)  ;; Offsets in this selection should refer to the document as it is after the transaction!?!?!
-            _ (println "new-pos" new-pos)]
+            new-pos (parinfer-yx->cm-pos (.-doc (.-state new-transaction)) ; expensive again
+                                         cursorLine
+                                         cursorX)]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
          :sequential true}))))
@@ -111,7 +105,6 @@
 (defn parinfer-plugin []
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
-        ;;  (println "transactionFilter parinfer-plugin current pos" (.-from (.-main (.-selection (.-state transaction)))))
          (if (.-docChanged transaction)
            (let [parinfer-changes (apply-parinfer-smart-with-diff transaction)]
              (if (seq parinfer-changes)
@@ -125,8 +118,7 @@
         (.create
          js/cm_state.EditorState
          #js {:doc doc
-              :extensions #js [;(.of js/cm_state.EditorState.tabSize 1)
-                               (.of js/cm_language.indentUnit " ")
+              :extensions #js [(.of js/cm_language.indentUnit " ")
                                js/codemirror.basicSetup
                                (parinfer-plugin)
                                (js/lang_clojure.clojure)]})]
@@ -140,4 +132,4 @@
 "))
 
 (def cm-editor
-  (create-editor initial-doc))    
+  (create-editor initial-doc))
