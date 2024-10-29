@@ -5,6 +5,7 @@
 ;;
 ;; Does not (yet) support:
 ;; - error highlighting
+;;   - well, it does now, but it's not very good (not triggered by undo/redo + when does 'extra' come into play?)
 ;; - importing as library
 ;; - turning off parinfer or switching to other modes
 
