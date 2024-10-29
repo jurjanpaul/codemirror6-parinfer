@@ -30,6 +30,7 @@
           "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr/dist/index.js",
           "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common/dist/index.js",
           "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language/dist/index.js",
+          "@codemirror/lint": "https://cdn.jsdelivr.net/npm/@codemirror/lint/dist/index.js",
           "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state/dist/index.js",
           "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view/dist/index.js",
           "style-mod": "https://cdn.jsdelivr.net/npm/style-mod/src/style-mod.js",
@@ -40,11 +41,13 @@
     <script type="module">
       import * as codemirror from 'codemirror';
       import * as cm_language from '@codemirror/language';
+      import * as cm_lint from '@codemirror/lint';
       import * as cm_view from '@codemirror/view';
       import * as cm_state from '@codemirror/state';
       import * as lang_clojure from '@nextjournal/lang-clojure'
       globalThis.codemirror = codemirror;
       globalThis.cm_language = cm_language;
+      globalThis.cm_lint = cm_lint;
       globalThis.cm_state = cm_state;
       globalThis.cm_view = cm_view;
       globalThis.lang_clojure = lang_clojure;

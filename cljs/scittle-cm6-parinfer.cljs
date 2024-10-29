@@ -61,6 +61,15 @@
                   :pos 0})
          :changes)))
 
+(defn error->diagnostic
+  [doc {:strs [x lineNo _extra message] :as _error}]
+  ;; (println "extra" (pr-str extra))
+  (let [pos (parinfer-yx->cm-pos doc lineNo x)]
+    #js{:severity "error"
+        :from pos
+        :to (inc pos)
+        :message message}))
+
 (defn apply-parinfer-smart-with-diff
   [transaction]
   (let [start-state (.-startState transaction)
@@ -88,7 +97,11 @@
                                 :changes changes})]
                                 ;; :selectionStartLine new-selection-y})] ; turned off as it is undermining smart (paren) mode somehow?!?
     (if (not (.-success result))
-      {} ; TODO: pass and show error somehow
+      (let [transaction
+            (js/cm_lint.setDiagnostics new-state
+                                       #js[(error->diagnostic new-doc
+                                                              (js->clj (.-error result)))])]
+        {:effects (get (js->clj transaction) "effects")})
       (let [cursorX (.-cursorX result)
             cursorLine (.-cursorLine result)
             changes (parinfer-result->cm-changes result new-text)
@@ -100,14 +113,17 @@
                                          cursorX)]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
-         :sequential true}))))
+         :sequential true
+         :effects (get (js->clj (js/cm_lint.setDiagnostics new-state #js[]))
+                       "effects")})))) ; reset diagnostics (maybe to regourous?) Not triggered in case of undo!
 
 (defn parinfer-plugin []
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
          (if (.-docChanged transaction)
-           (let [parinfer-changes (apply-parinfer-smart-with-diff transaction)]
-             (if (seq parinfer-changes)
+           (let [{:keys [effects changes] :as parinfer-changes}
+                 (apply-parinfer-smart-with-diff transaction)]
+             (if (or effects (seq (js->clj changes)))
                #js[transaction
                    (clj->js parinfer-changes)]
                transaction))
