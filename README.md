@@ -36,3 +36,6 @@ Honestly though: Parinfer has a simple API, so this should not be rocket science
  * I had learned from [this CodeMirror discussion thread](https://discuss.codemirror.net/t/implement-parinfer-with-snippets/3549/2) that it would probably be a good idea to diff the Parinfer output with its input. I am now indeed doing that, using the [diff-match-patch](https://github.com/google/diff-match-patch) library, if only to keep the edit history's memory usage down.
  * All in all, a lot of expensive transformations need to happen for each key press... Even so, the result feels fast enough, even with a large code base on a phone.
  * I wonder if the same result may after all be achieved with less expensive steps, but I'll take (relatively) 'slow' over asynchronous postprocessing any day, having experienced how poorly that works out when an editor provides no alternative.
+
+## Demo
+<iframe src="https://jurjanpaul.github.io/codemirror6-parinfer/" width="100%" height="600px"></iframe>
