@@ -9,6 +9,10 @@ Try it at https://jurjanpaul.github.io/codemirror6-parinfer/ (which also uses [N
 ## TODO
 - [x] `smartMode` Parinfer
 - [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
+  - [ ] Fix undo/redo
+  - [ ] Leave other effects alone
+- [ ] Refactor (constantly of course)
+- [ ] ? Take special care of selections
 - [ ] Maybe mark `parenTrails`
 - [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
@@ -26,6 +30,7 @@ Honestly though: Parinfer has a simple API, so this should not be rocket science
 
 ## Experience so far
 
+* Looked at Shaun Lebron's original [parinfer-codemirror.js](https://github.com/shaunlebron/parinfer-codemirror) code and will study it more, as well as other Parinfer integrations, but decided that CodeMirror 6 is different enough that a fresh start makes sense.
 * Interesting that [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) is the hook needed to 'add' synchronous Parinfer modifications to a user triggered state transaction. (I overlooked it at first, because filtering means something else in the contexts that I am used to.)
 * The documentation for [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) clearly states that it is recommended to avoid accessing `Transaction.state` in a filter, but I am finding that I need to do that twice (!) in the same invocation to be able to translate CodeMirror positions to Parinfer coordinates and vice versa.
 * I had learned from [this CodeMirror discussion thread](https://discuss.codemirror.net/t/implement-parinfer-with-snippets/3549/2) that it would probably be a good idea to diff the Parinfer output with its input. I am now indeed doing that, using the [diff-match-patch](https://github.com/google/diff-match-patch) library.
