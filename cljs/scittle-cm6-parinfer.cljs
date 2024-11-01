@@ -77,15 +77,13 @@
         old-cursor (-> start-state .-selection .-main .-head)
         old-doc (.-doc start-state)
         [old-y old-x] (cm-pos->parinfer-yx old-doc old-cursor)
-        new-state (.-state transaction) ; strongly discouraged because expensive, but can't be helped
-        new-selection (-> new-state .-selection .-main)
+        new-selection (-> transaction .-newSelection .-main)
         new-selection-start (.-from new-selection)
-        new-state-doc (.-doc new-state)
+        new-doc (.-newDoc transaction)
         [new-selection-y _new-selection-x]
-        (cm-pos->parinfer-yx new-state-doc new-selection-start)
+        (cm-pos->parinfer-yx new-doc new-selection-start)
         new-cursor (.-head new-selection)
-        new-doc (.-doc new-state)
-        [new-y new-x] (cm-pos->parinfer-yx new-state-doc new-cursor)
+        [new-y new-x] (cm-pos->parinfer-yx new-doc new-cursor)
         changes (cm-changeset->parinfer-changes old-doc
                                                 (.-changes transaction))
         new-text (.toString new-doc)
@@ -99,23 +97,23 @@
                                 ;; :selectionStartLine new-selection-y})] ; turned off as it is undermining smart (paren) mode somehow?!?
     (if (not (.-success result))
       (let [transaction
-            (js/cm_lint.setDiagnostics new-state
+            (js/cm_lint.setDiagnostics (.-state transaction) ; strongly discouraged because expensive
                                        #js[(error->diagnostic new-doc
                                                               (js->clj (.-error result)))])]
         {:effects (get (js->clj transaction) "effects")})
       (let [cursorX (.-cursorX result)
             cursorLine (.-cursorLine result)
             changes (parinfer-result->cm-changes result new-text)
-            new-transaction (.update new-state
+            new-transaction (.update (.-state transaction) ; strongly discouraged because expensive
                                      (clj->js {:changes changes
                                                :filter false}))
-            new-pos (parinfer-yx->cm-pos (.-doc (.-state new-transaction)) ; expensive again
+            new-pos (parinfer-yx->cm-pos (.-newDoc new-transaction)
                                          cursorLine
                                          cursorX)]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
          :sequential true
-         :effects (get (js->clj (js/cm_lint.setDiagnostics new-state #js[]))
+         :effects (get (js->clj (js/cm_lint.setDiagnostics (.-state transaction) #js[])) ; again
                        "effects")})))) ; reset diagnostics (maybe to regourous?) Not triggered in case of undo!
 
 (defn parinfer-plugin []
