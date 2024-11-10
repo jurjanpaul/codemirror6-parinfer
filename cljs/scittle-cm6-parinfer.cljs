@@ -169,18 +169,30 @@
                      :message message}]
              extra-diagnostics)))
 
+(defn- other-diagnostics
+  [state]
+  (let [others #js[]]
+    (js/cm_lint.forEachDiagnostic state
+                                  (fn [d _from _to]
+                                    (when-not (= "parinfer" (.-source d))
+                                      (.push others d))))
+    others))
+
 (defn- parinfer-view-update-listener []
   (.of (.-updateListener js/cm_view.EditorView)
        (fn [update]
          (when (.-docChanged update)
            (let [state (.-state update)
-                 {:keys [_previous current] :as _parinfer-error} (.field state parinfer-error-field)
+                 {:keys [_previous current] :as _parinfer-error}
+                 (.field state parinfer-error-field)
+                 parinfer-diagnostics (if current
+                                        (error->diagnostics (.-doc state)
+                                                            (js->clj current))
+                                        #js[])
                  diagnostic-tr
-                 (if (js->clj current)
-                    (js/cm_lint.setDiagnostics state
-                                               (error->diagnostics (.-doc state)
-                                                                   (js->clj current)))
-                    (js/cm_lint.setDiagnostics state #js[]))] ; TODO: only remove diagnostics added by parinfer
+                 (js/cm_lint.setDiagnostics state
+                                            (.concat parinfer-diagnostics
+                                                     (other-diagnostics state)))]
              (.dispatch (.-view update) diagnostic-tr))))))
 
 (defn parinfer-extension []
