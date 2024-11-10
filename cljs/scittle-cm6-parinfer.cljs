@@ -35,7 +35,7 @@
                     (filter #(.is % parinfer-error-effect)))]
            (doseq [effect parinfer-errors
                    :let [{:keys [previous current]} (.-value effect)]]
-             (println "inverting" previous current)
+             ;; (println "inverting" previous current)
              (.push inverted (.of parinfer-error-effect {:previous current
                                                          :current previous})))
            inverted))))
@@ -180,7 +180,7 @@
                                                #js[(error->diagnostic (.-doc state)
                                                                       (js->clj current))])
                     (js/cm_lint.setDiagnostics state #js[]))] ; TODO: only remove diagnostics added by parinfer
-             (println "dispatching diagnostic-tr for" current)
+             ;; (println "dispatching diagnostic-tr for" current)
              (.dispatch (.-view update) diagnostic-tr))))))
 
 ;; Still some racing condition
