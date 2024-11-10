@@ -35,9 +35,10 @@
                     (filter #(.is % parinfer-error-effect)))]
            (doseq [effect parinfer-errors
                    :let [{:keys [previous current]} (.-value effect)]]
-             ;; (println "inverting" previous current)
-             (.push inverted (.of parinfer-error-effect {:previous current
-                                                         :current previous})))
+             (.push inverted
+                    (.of parinfer-error-effect
+                         {:previous current
+                          :current previous})))
            inverted))))
 
 (def diff-engine
@@ -125,14 +126,6 @@
            (.of parinfer-error-effect
                 {:previous existing-parinfer-error
                  :current (.-error result)})))}
-      ;;  :annotations (.of (.-addToHistory js/cm_state.Transaction) true)}
-      ;; (let [transaction
-      ;;       (js/cm_lint.setDiagnostics (.-state transaction) ; strongly discouraged because expensive
-      ;;                                  #js[(error->diagnostic new-doc
-      ;;                                                         (js->clj (.-error result)))])]
-      ;;   ;; {:effects (get (js->clj transaction) "effects")}
-      ;;   {:effects (.of setParinferError (.-error result))}) ; should become part of undo history; why not?
-        ;;  :annotations (.of (.-history js/cm_state.Annotation) "add")})
       (let [cursorX (.-cursorX result)
             cursorLine (.-cursorLine result)
             changes (parinfer-result->cm-changes result new-text)
@@ -144,7 +137,14 @@
                                          cursorX)]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
-         :sequential true}))))
+         :sequential true
+         :effects
+         (let [existing-parinfer-error
+               (:current (.field start-state parinfer-error-field false))]
+           (when-not (nil? (js->clj existing-parinfer-error))
+             (.of parinfer-error-effect
+                  {:previous existing-parinfer-error
+                   :current nil})))}))))
 
 (defn parinfer-transaction-filter []
   (.of (.-transactionFilter js/cm_state.EditorState)
@@ -173,20 +173,14 @@
        (fn [update]
          (when (.-docChanged update)
            (let [state (.-state update)
-                 {:keys [previous current] :as _parinfer-error} (.field state parinfer-error-field)
+                 {:keys [_previous current] :as _parinfer-error} (.field state parinfer-error-field)
                  diagnostic-tr
-                 (if current
+                 (if (js->clj current)
                     (js/cm_lint.setDiagnostics state
                                                #js[(error->diagnostic (.-doc state)
                                                                       (js->clj current))])
                     (js/cm_lint.setDiagnostics state #js[]))] ; TODO: only remove diagnostics added by parinfer
-             ;; (println "dispatching diagnostic-tr for" current)
              (.dispatch (.-view update) diagnostic-tr))))))
-
-;; Still some racing condition
-;; w.r.t. undo/redo and dispatching diagnostic effecting transactions
-;; and value of parinfer-error-field
-;; Strange: should all be part of synchronous effect system.
 
 (defn parinfer-extension []
   #js[parinfer-error-field
