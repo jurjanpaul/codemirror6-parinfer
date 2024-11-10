@@ -8,10 +8,10 @@
 ;; - importing as library
 ;; - turning off parinfer or switching to other modes
 
-(def parinfer-error-effect
+(def ^:private parinfer-error-effect
   (.define js/cm_state.StateEffect))
 
-(def parinfer-error-field
+(def ^:private parinfer-error-field
   (.define js/cm_state.StateField
            #js{"create"
                (fn []
@@ -26,7 +26,7 @@
                    (.-value parinfer-error-effect)
                    value))}))
 
-(def invert-parinfer-error
+(def ^:private invert-parinfer-error
   (.of js/cm_commands.invertedEffects
        (fn [tr]
          (let [inverted #js[]
@@ -41,21 +41,21 @@
                           :current previous})))
            inverted))))
 
-(def diff-engine
+(def ^:private diff-engine
   (js/diff_match_patch.))
 
-(defn cm-pos->parinfer-yx
+(defn- cm-pos->parinfer-yx
   [doc pos]
   (let [line (.lineAt doc pos)
         y (dec (.-number line))
         x (- pos (.-from line))]
     [y x]))
 
-(defn parinfer-yx->cm-pos
+(defn- parinfer-yx->cm-pos
   [doc y x]
   (+ (.-from (.line doc (inc y))) x))
 
-(defn cm-changeset->parinfer-changes
+(defn- cm-changeset->parinfer-changes
   "Converts a CodeMirror 6 changeset into a Parinfer changes array."
   [old-doc codemirror-changes]
   (let [changes #js[]]
@@ -94,7 +94,17 @@
                   :pos 0})
          :changes)))
 
-(defn apply-parinfer-smart-with-diff
+(defn- maybe-error-effect
+  [start-state parinfer-error]
+  (let [existing-parinfer-error
+        (:current (.field start-state parinfer-error-field false))]
+    (when-not (= (js->clj existing-parinfer-error)
+                 (js->clj parinfer-error))
+      (.of parinfer-error-effect
+           {:previous existing-parinfer-error
+            :current parinfer-error}))))
+
+(defn- apply-parinfer-smart-with-diff
   [transaction]
   (let [start-state (.-startState transaction)
         old-cursor (-> start-state .-selection .-main .-head)
@@ -119,13 +129,7 @@
                                 :changes changes})]
                                 ;; :selectionStartLine new-selection-y})] ; turned off as it is undermining smart (paren) mode somehow?!?
     (if (not (.-success result))
-      {:effects
-       (let [existing-parinfer-error
-             (:current (.field start-state parinfer-error-field false))]
-         (when-not (= (js->clj existing-parinfer-error) (js->clj (.-error result)))
-           (.of parinfer-error-effect
-                {:previous existing-parinfer-error
-                 :current (.-error result)})))}
+      {:effects (maybe-error-effect start-state (.-error result))}
       (let [cursorX (.-cursorX result)
             cursorLine (.-cursorLine result)
             changes (parinfer-result->cm-changes result new-text)
@@ -138,15 +142,9 @@
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
          :sequential true
-         :effects
-         (let [existing-parinfer-error
-               (:current (.field start-state parinfer-error-field false))]
-           (when-not (nil? (js->clj existing-parinfer-error))
-             (.of parinfer-error-effect
-                  {:previous existing-parinfer-error
-                   :current nil})))}))))
+         :effects (maybe-error-effect start-state nil)}))))
 
-(defn parinfer-transaction-filter []
+(defn- parinfer-transaction-filter []
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
          (if (.-docChanged transaction)
@@ -158,17 +156,20 @@
                transaction))
            transaction))))
 
-(defn error->diagnostic
-  [doc {:strs [x lineNo _extra message] :as _error}]
-  ;; (println "extra" (pr-str extra))
-  (let [pos (parinfer-yx->cm-pos doc lineNo x)]
-    #js{:severity "error"
-        :source "parinfer"
-        :from pos
-        :to (inc pos)
-        :message message}))
+(defn- error->diagnostics
+  [doc {:strs [x lineNo extra message] :as _error}]
+  (let [pos (parinfer-yx->cm-pos doc lineNo x)
+        extra-diagnostics (if extra
+                             (error->diagnostics doc extra)
+                             #js[])]
+    (.concat #js[#js{:severity "error"
+                     :source "parinfer"
+                     :from pos
+                     :to (inc pos)
+                     :message message}]
+             extra-diagnostics)))
 
-(defn parinfer-view-update-listener []
+(defn- parinfer-view-update-listener []
   (.of (.-updateListener js/cm_view.EditorView)
        (fn [update]
          (when (.-docChanged update)
@@ -177,8 +178,8 @@
                  diagnostic-tr
                  (if (js->clj current)
                     (js/cm_lint.setDiagnostics state
-                                               #js[(error->diagnostic (.-doc state)
-                                                                      (js->clj current))])
+                                               (error->diagnostics (.-doc state)
+                                                                   (js->clj current)))
                     (js/cm_lint.setDiagnostics state #js[]))] ; TODO: only remove diagnostics added by parinfer
              (.dispatch (.-view update) diagnostic-tr))))))
 
