@@ -4,10 +4,41 @@
 ;; - Parinfer smartmode
 ;;
 ;; Does not (yet) support:
-;; - error highlighting
-;;   - well, it does now, but it's not very good (not triggered by undo/redo + when does 'extra' come into play?)
+;; - styling parentrails
 ;; - importing as library
 ;; - turning off parinfer or switching to other modes
+
+(def parinfer-error-effect
+  (.define js/cm_state.StateEffect))
+
+(def parinfer-error-field
+  (.define js/cm_state.StateField
+           #js{"create"
+               (fn []
+                 {:previous nil
+                  :current nil})
+               "update"
+               (fn [value, tr]
+                 (if-let [parinfer-error-effect
+                          (->> (.-effects tr)
+                               (filter #(.is % parinfer-error-effect))
+                               first)]
+                   (.-value parinfer-error-effect)
+                   value))}))
+
+(def invert-parinfer-error
+  (.of js/cm_commands.invertedEffects
+       (fn [tr]
+         (let [inverted #js[]
+               parinfer-errors
+               (->> (.-effects tr)
+                    (filter #(.is % parinfer-error-effect)))]
+           (doseq [effect parinfer-errors
+                   :let [{:keys [previous current]} (.-value effect)]]
+             (println "inverting" previous current)
+             (.push inverted (.of parinfer-error-effect {:previous current
+                                                  :current previous})))
+           inverted))))
 
 (def diff-engine
   (js/diff_match_patch.))
@@ -62,15 +93,6 @@
                   :pos 0})
          :changes)))
 
-(defn error->diagnostic
-  [doc {:strs [x lineNo _extra message] :as _error}]
-  ;; (println "extra" (pr-str extra))
-  (let [pos (parinfer-yx->cm-pos doc lineNo x)]
-    #js{:severity "error"
-        :from pos
-        :to (inc pos)
-        :message message}))
-
 (defn apply-parinfer-smart-with-diff
   [transaction]
   (let [start-state (.-startState transaction)
@@ -96,11 +118,21 @@
                                 :changes changes})]
                                 ;; :selectionStartLine new-selection-y})] ; turned off as it is undermining smart (paren) mode somehow?!?
     (if (not (.-success result))
-      (let [transaction
-            (js/cm_lint.setDiagnostics (.-state transaction) ; strongly discouraged because expensive
-                                       #js[(error->diagnostic new-doc
-                                                              (js->clj (.-error result)))])]
-        {:effects (get (js->clj transaction) "effects")})
+      {:effects
+       (let [existing-parinfer-error
+             (:current (.field start-state parinfer-error-field false))]
+         (when-not (= existing-parinfer-error (.-error result))
+           (.of parinfer-error-effect
+                {:previous existing-parinfer-error
+                 :current (.-error result)})))}
+      ;;  :annotations (.of (.-addToHistory js/cm_state.Transaction) true)}
+      ;; (let [transaction
+      ;;       (js/cm_lint.setDiagnostics (.-state transaction) ; strongly discouraged because expensive
+      ;;                                  #js[(error->diagnostic new-doc
+      ;;                                                         (js->clj (.-error result)))])]
+      ;;   ;; {:effects (get (js->clj transaction) "effects")}
+      ;;   {:effects (.of setParinferError (.-error result))}) ; should become part of undo history; why not?
+        ;;  :annotations (.of (.-history js/cm_state.Annotation) "add")})
       (let [cursorX (.-cursorX result)
             cursorLine (.-cursorLine result)
             changes (parinfer-result->cm-changes result new-text)
@@ -112,11 +144,9 @@
                                          cursorX)]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
-         :sequential true
-         :effects (get (js->clj (js/cm_lint.setDiagnostics (.-state transaction) #js[])) ; again
-                       "effects")})))) ; reset diagnostics (maybe to regourous?) Not triggered in case of undo!
+         :sequential true}))))
 
-(defn parinfer-plugin []
+(defn parinfer-transaction-filter []
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
          (if (.-docChanged transaction)
@@ -128,17 +158,53 @@
                transaction))
            transaction))))
 
+(defn error->diagnostic
+  [doc {:strs [x lineNo _extra message] :as _error}]
+  ;; (println "extra" (pr-str extra))
+  (let [pos (parinfer-yx->cm-pos doc lineNo x)]
+    #js{:severity "error"
+        :source "parinfer"
+        :from pos
+        :to (inc pos)
+        :message message}))
+
+(defn parinfer-view-update-listener []
+  (.of (.-updateListener js/cm_view.EditorView)
+       (fn [update]
+         (when (.-docChanged update)
+           (let [state (.-state update)
+                 {:keys [previous current] :as _parinfer-error} (.field state parinfer-error-field)
+                 diagnostic-tr
+                 (if current
+                    (js/cm_lint.setDiagnostics state
+                                               #js[(error->diagnostic (.-doc state)
+                                                                      (js->clj current))])
+                    (js/cm_lint.setDiagnostics state #js[]))] ; TODO: only remove diagnostics added by parinfer
+             (println "dispatching diagnostic-tr for" current)
+             (.dispatch (.-view update) diagnostic-tr))))))
+
+;; Still some racing condition
+;; w.r.t. undo/redo and dispatching diagnostic effecting transactions
+;; and value of parinfer-error-field
+;; Strange: should all be part of synchronous effect system.
+
+(defn parinfer-extension []
+  #js[parinfer-error-field
+      invert-parinfer-error
+      (parinfer-transaction-filter)
+      (parinfer-view-update-listener)])
+
 (defn create-editor [doc]
   (let [start-state
         (.create
          js/cm_state.EditorState
          #js {:doc doc
-              :extensions #js [(.of js/cm_language.indentUnit " ")
-                               js/codemirror.basicSetup
-                               (parinfer-plugin)
-                               (js/lang_clojure.clojure)]})]
-    (js/cm_view.EditorView. #js {:state start-state
-                                         :parent (.getElementById js/document "editor")})))
+              :extensions #js[(.of js/cm_language.indentUnit " ")
+                              js/codemirror.basicSetup
+                              (js/lang_clojure.clojure)
+                              (parinfer-extension)]})]
+    (js/cm_view.EditorView. #js{:state start-state
+                                :parent (.getElementById js/document "editor")})))
 
 (def initial-doc
   (str/trim "
