@@ -8,7 +8,7 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
 
 ## TODO
 - [x] `smartMode` Parinfer
-- [ ] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
+- [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
   - [x] Fix undo/redo
   - [ ] Leave other effects alone
 - [ ] Refactor (constantly of course)
@@ -35,6 +35,6 @@ Honestly though: Parinfer has a simple API, so this should not be rocket science
  * Interesting that [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) is the hook needed to 'add' synchronous Parinfer modifications to a user triggered state transaction. (I overlooked it at first, because filtering means something else in the contexts that I am used to.)
  * The documentation for [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) clearly states that it is recommended to avoid accessing `Transaction.state` in a filter, but it seems unavoidable when creating a new transaction for the Parinfer changes and to apply diagnostics in case of error.
  * I had learned from [this CodeMirror discussion thread](https://discuss.codemirror.net/t/implement-parinfer-with-snippets/3549/2) that it would probably be a good idea to diff the Parinfer output with its input. I am now indeed doing that, using the [diff-match-patch](https://github.com/google/diff-match-patch) library, if only to keep the edit history's memory usage down. **Update**: CodeMirror's [diff function](https://github.com/codemirror/merge?tab=readme-ov-file#user-content-diff) might work as well, keeping external dependencies down.
- * Marking Parinfer errors in such a way that they can be undone and redone proved trickier than I had expected. I got it to work with a StateField, StateEffect and invertedEffects, but perhaps I am still simply missing something obvious. *Oops, it's still buggy...*; fortunately, I know which bit of logic needs adding.
+ * Marking Parinfer errors in such a way that they can be undone and redone proved trickier than I had expected. I got it to work with a StateField, StateEffect and invertedEffects, but perhaps I am still simply missing something obvious.
  * All in all, a lot of expensive transformations need to happen for each key press... Even so, the result feels fast enough, even with a large code base on a phone.
  * I wonder if the same result may after all be achieved with less expensive steps, but I'll take (relatively) 'slow' over asynchronous postprocessing any day, having experienced how poorly that works out when an editor provides no alternative.
