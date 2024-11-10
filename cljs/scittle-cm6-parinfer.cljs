@@ -37,7 +37,7 @@
                    :let [{:keys [previous current]} (.-value effect)]]
              (println "inverting" previous current)
              (.push inverted (.of parinfer-error-effect {:previous current
-                                                  :current previous})))
+                                                         :current previous})))
            inverted))))
 
 (def diff-engine
@@ -121,7 +121,7 @@
       {:effects
        (let [existing-parinfer-error
              (:current (.field start-state parinfer-error-field false))]
-         (when-not (= existing-parinfer-error (.-error result))
+         (when-not (= (js->clj existing-parinfer-error) (js->clj (.-error result)))
            (.of parinfer-error-effect
                 {:previous existing-parinfer-error
                  :current (.-error result)})))}
