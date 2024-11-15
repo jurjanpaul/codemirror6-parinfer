@@ -11,9 +11,9 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
 - [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
   - [x] Fix undo/redo
   - [x] Leave other effects alone
+- [x] Take special care of selections
+- [ ] Mark `parenTrails`
 - [ ] Refactor (constantly of course)
-- [ ] ? Take special care of selections
-- [ ] Maybe mark `parenTrails`
 - [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
   - [ ] Options to configure/toggle

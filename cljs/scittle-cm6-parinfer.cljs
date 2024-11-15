@@ -110,24 +110,25 @@
         old-cursor (-> start-state .-selection .-main .-head)
         old-doc (.-doc start-state)
         [old-y old-x] (cm-pos->parinfer-yx old-doc old-cursor)
-        new-selection (-> transaction .-newSelection .-main)
-        new-selection-start (.-from new-selection)
         new-doc (.-newDoc transaction)
-        [new-selection-y _new-selection-x]
-        (cm-pos->parinfer-yx new-doc new-selection-start)
+        new-text (.toString new-doc)
+        new-selection (-> transaction .-newSelection .-main)
         new-cursor (.-head new-selection)
         [new-y new-x] (cm-pos->parinfer-yx new-doc new-cursor)
         changes (cm-changeset->parinfer-changes old-doc
                                                 (.-changes transaction))
-        new-text (.toString new-doc)
+        selection-start-line
+        (when-not (.-empty new-selection)
+           (-> (cm-pos->parinfer-yx new-doc (.-from new-selection))
+               first))
         result (.smartMode js/parinfer
                            new-text
                            #js {:prevCursorX old-x
                                 :prevCursorLine old-y
                                 :cursorX new-x
                                 :cursorLine new-y
-                                :changes changes})]
-                                ;; :selectionStartLine new-selection-y})] ; turned off as it is undermining smart (paren) mode somehow?!?
+                                :changes changes
+                                :selectionStartLine selection-start-line})]
     (if (not (.-success result))
       {:effects (maybe-error-effect start-state (.-error result))}
       (let [cursorX (.-cursorX result)
