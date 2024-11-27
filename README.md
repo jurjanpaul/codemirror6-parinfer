@@ -10,7 +10,7 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
 - [x] `smartMode` Parinfer
 - [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
   - [x] Fix undo/redo
-    - [ ] Understand and fix racing condition in case backspace and/or Ctrl-Z is kept pressed in...
+    - [ ] Understand and fix race condition in case backspace and/or Ctrl-Z is kept pressed in...
   - [x] Leave other effects alone
 - [x] Take special care of selections
 - [ ] Mark `parenTrails`
