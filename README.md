@@ -10,11 +10,11 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
 - [x] `smartMode` Parinfer
 - [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
   - [x] Fix undo/redo
-    - [x] Understand and fix race condition in case backspace and/or Ctrl-Z is kept pressed in...
+    - [x] Understand and fix race condition in case backspace and/or Ctrl-Z is kept pressed in.
   - [x] Leave other effects alone
 - [x] Take special care of selections
 - [x] Pin all dependencies (lesson learned after breaking change, but with obvious drawbacks)
-- [ ] Mark `parenTrails`
+- [ ] Mark `parenTrails` (for completeness only; I can live without)
 - [ ] Refactor (constantly of course)
 - [ ] Examine interaction with other CodeMirror extensions
 - [ ] Make into a published JS library
