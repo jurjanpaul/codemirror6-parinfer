@@ -6,6 +6,15 @@
 ;; - importing as library
 ;; - turning off parinfer or switching to other modes
 
+(def effect-id-counter (atom 0))
+
+(defn next-effect-id []
+  (swap! effect-id-counter inc))
+
+(defn debug [label v]
+  ;(println label (js->clj v))
+  v)
+
 (def ^:private parinfer-error-effect
   (.define js/cm_state.StateEffect))
 
@@ -13,15 +22,17 @@
   (.define js/cm_state.StateField
            #js{"create"
                (fn []
-                 {:previous nil
-                  :current nil})
+                 (debug "create"
+                        {:id (next-effect-id)
+                         :previous nil
+                         :current nil}))
                "update"
                (fn [value, tr]
-                 (if-let [parinfer-error-effect
+                 (if-let [a-parinfer-error-effect
                           (->> (.-effects tr)
                                (filter #(.is % parinfer-error-effect))
-                               first)]
-                   (.-value parinfer-error-effect)
+                               last)]
+                   (.-value a-parinfer-error-effect)
                    value))}))
 
 (def ^:private invert-parinfer-error
@@ -32,11 +43,14 @@
                (->> (.-effects tr)
                     (filter #(.is % parinfer-error-effect)))]
            (doseq [effect parinfer-errors
-                   :let [{:keys [previous current]} (.-value effect)]]
+                   :let [{:keys [id previous current]} (.-value effect)]]
              (.push inverted
                     (.of parinfer-error-effect
-                         {:previous current
-                          :current previous})))
+                         (debug "invert-parinfer-error"
+                                {:id (next-effect-id)
+                                 :inverts-id id
+                                 :previous current
+                                 :current previous}))))
            inverted))))
 
 (def ^:private diff-engine
@@ -99,8 +113,10 @@
     (when-not (= (js->clj existing-parinfer-error)
                  (js->clj parinfer-error))
       (.of parinfer-error-effect
-           {:previous existing-parinfer-error
-            :current parinfer-error}))))
+           (debug "maybe-error-effect"
+                  {:id (next-effect-id)
+                   :previous existing-parinfer-error
+                   :current parinfer-error})))))
 
 (defn- apply-parinfer-smart-with-diff
   [transaction]
