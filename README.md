@@ -7,7 +7,7 @@ Getting there, but this is still very much a work in progress, nowhere near a pu
 Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), which also uses [Nextjournal's Clojure syntax support for CodeMirror 6](https://github.com/nextjournal/lang-clojure).
 
 > [!NOTE]
-> **The demo page is currently broken** (just like the Scittle example above)**!** That should teach is not to rely on unpinned dependencies...
+> **The demo page is currently broken** (just like the Scittle example above)**!** That should teach us not to rely on unpinned dependencies...
 
 ## TODO
 - [x] `smartMode` Parinfer
