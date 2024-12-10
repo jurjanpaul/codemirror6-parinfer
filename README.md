@@ -6,9 +6,6 @@ Getting there, but this is still very much a work in progress, nowhere near a pu
 
 Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), which also uses [Nextjournal's Clojure syntax support for CodeMirror 6](https://github.com/nextjournal/lang-clojure).
 
-> [!NOTE]
-> **The demo page is currently broken** (just like the Scittle example above)**!** That should teach us not to rely on unpinned dependencies...
-
 ## TODO
 - [x] `smartMode` Parinfer
 - [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
@@ -16,7 +13,7 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
     - [ ] Understand and fix race condition in case backspace and/or Ctrl-Z is kept pressed in...
   - [x] Leave other effects alone
 - [x] Take special care of selections
-- [ ] **Stop relying on unpinned CodeMirror dependencies**
+- [x] Pin all dependencies (lesson learned after breaking change, but with obvious drawbacks)
 - [ ] Mark `parenTrails`
 - [ ] Refactor (constantly of course)
 - [ ] Examine interaction with other CodeMirror extensions
