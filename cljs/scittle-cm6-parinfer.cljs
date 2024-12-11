@@ -53,9 +53,6 @@
                                  :current previous}))))
            inverted))))
 
-(def ^:private diff-engine
-  (js/diff_match_patch.))
-
 (defn- cm-pos->parinfer-yx
   [doc pos]
   (let [line (.lineAt doc pos)
@@ -86,25 +83,17 @@
 (defn- parinfer-result->cm-changes
   [result input]
   (let [parinferred-text (.-text result)
-        diffs (.diff_main diff-engine input parinferred-text)]
-    (.diff_cleanupSemantic diff-engine diffs)
-    (->> (js->clj diffs)
-         (reduce (fn [{:keys [pos] :as acc} diff]
-                   (let [op (aget diff 0)
-                         text (aget diff 1)]
-                     (case op
-                       0 (update acc :pos + (count text))
-                       -1 (let [new-pos (+ pos (count text))]
-                            (-> acc
-                                (update :changes conj {:from pos
-                                                       :to new-pos})
-                                (assoc :pos new-pos)))
-                       1 (update acc :changes conj {:from pos
-                                                    :to pos
-                                                    :insert text}))))
-                 {:changes []
-                  :pos 0})
-         :changes)))
+        diffs (js/cm_merge.presentableDiff input parinferred-text)]
+     (->> (js->clj diffs)
+          (mapv (fn [change]
+                  (let [from-a (.-fromA change)
+                        to-a (.-toA change)
+                        from-b (.-fromB change)
+                        to-b (.-toB change)]
+                    (merge {:from from-a
+                            :to to-a}
+                           (when-not (= from-b to-b)
+                             {:insert (subs parinferred-text from-b to-b)}))))))))
 
 (defn- maybe-error-effect
   [start-state parinfer-error]
