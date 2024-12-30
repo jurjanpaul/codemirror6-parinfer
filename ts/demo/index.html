@@ -36,7 +36,8 @@
           "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.35.3/dist/index.js",
           "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.7.4/dist/index.js",
           "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.2/src/style-mod.js",
-          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js",
+          "@jurjanpaul/codemirror6-parinfer": "codemirror6-parinfer.js"
         }
       }
     </script>
@@ -49,6 +50,7 @@
       import * as cm_state from '@codemirror/state';
       import * as cm_merge from '@codemirror/merge';
       import * as lang_clojure from '@nextjournal/lang-clojure'
+      import * as codemirror6_parinfer from '@jurjanpaul/codemirror6-parinfer'
       globalThis.codemirror = codemirror;
       globalThis.cm_commands = cm_commands;
       globalThis.cm_language = cm_language;
@@ -57,10 +59,10 @@
       globalThis.cm_view = cm_view;
       globalThis.cm_merge = cm_merge;
       globalThis.lang_clojure = lang_clojure;
+      globalThis.codemirror6_parinfer = codemirror6_parinfer;
       scittle.core.eval_script_tags();
     </script>
-    <script type="application/x-scittle" src="cljs/scittle-cm6-parinfer.cljs"></script>
-    <script type="application/x-scittle" src="cljs/scittle-cm6-parinfer-demo.cljs"></script>
+    <script type="application/x-scittle" src="cm6-parinfer-module-demo.cljs"></script>
   </head>
   <body>
     <h1>Parinfer in CodeMirror 6 demo</h1>
