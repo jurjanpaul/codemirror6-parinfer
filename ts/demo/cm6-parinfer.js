@@ -1,0 +1,1 @@
+../../dist/cm6-parinfer.js

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "moduleResolution": "node",
-    "target": "es2016",
+    "target": "es2017",
     "module": "esnext",
     "esModuleInterop": true,
     "strict": true,
@@ -10,6 +10,7 @@
     "declaration": true,
     "sourceMap": true,
     "declarationMap": true,
-    "allowArbitraryExtensions": true
+    "allowArbitraryExtensions": true,
+    "typeRoots": ["./node_modules/@types", "./ts/parinfer.d.ts"]
   }
 }

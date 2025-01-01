@@ -6,15 +6,34 @@
 // - importing as library
 // - turning off parinfer or switching to other modes
 
+import type { Parinfer, ParinferChange, ParinferResult, ParinferError } from "parinfer"
+
+declare global {
+ interface Window {
+   parinfer?: Parinfer;
+ }
+}
+
+const getParinfer = async (): Promise<Parinfer> => {
+  if (window.parinfer) {
+    return window.parinfer;
+  }
+  try {
+    const module = await import('parinfer');
+    return (module.default || module) as Parinfer;
+  } catch (error) {
+    throw new Error('Failed to load parinfer library: ' + error);
+  }
+};
+const parinfer = await getParinfer();
+
 import type { ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state"
-import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
+import { ChangeSet, EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
 import { EditorView } from "@codemirror/view"
 import type { Diagnostic } from "@codemirror/lint"
 import { setDiagnostics, forEachDiagnostic } from "@codemirror/lint"
 import { invertedEffects } from "@codemirror/commands"
 import { presentableDiff } from "@codemirror/merge"
-import type { ParinferError } from "parinfer"
-import * as parinfer from "parinfer"
 
 let effectIdCounter = 0
 
@@ -34,7 +53,7 @@ const parinferErrorField = StateField.define<Cm6ParinferError>({
     current: null
   }),
   update: (value, tr) => {
-    const effect = tr.effects.find(e => e.is(parinferErrorEffect))
+    const effect = tr.effects.filter(e => e.is(parinferErrorEffect)).at(-1)
     return effect ? effect.value : value
   }
 })
@@ -54,7 +73,7 @@ const invertParinferError = invertedEffects.of((tr) => {
   return inverted
 })
 
-function cmPosToParinferYX(doc: Text, pos: number): [number, number] {
+function cmPosToParinferYx(doc: Text, pos: number): [number, number] {
   const line = doc.lineAt(pos)
   const y = line.number - 1
   const x = pos - line.from
@@ -65,22 +84,22 @@ function parinferYxToCmPos(doc: Text, y: number, x: number): number {
   return doc.line(y + 1).from + x
 }
 
-function cmChangesetToParinferChanges(oldDoc: Text, changes: any) {
-  const parinferChanges: any[] = []
-  changes.iterChanges((fromA: number, toA: number, _fromB: number, _toB: number, inserted: Text) => {
-    const [fromAY, fromAX] = cmPosToParinferYX(oldDoc, fromA)
+function cmChangesetToParinferChanges(oldDoc: Text, cmChanges: ChangeSet): ParinferChange[] {
+  const parinferChanges: ParinferChange[] = []
+  cmChanges.iterChanges((fromA: number, toA: number, _fromB: number, _toB: number, inserted: Text) => {
+    const [fromAy, fromAx] = cmPosToParinferYx(oldDoc, fromA)
     const oldText = oldDoc.sliceString(fromA, toA)
     parinferChanges.push({
-      lineNo: fromAY,
-      x: fromAX,
-      oldText,
+      lineNo: fromAy,
+      x: fromAx,
+      oldText: oldText,
       newText: inserted.toString()
     })
   })
   return parinferChanges
 }
 
-function parinferResultToCmChanges(result: any, input: string): ChangeSpec[] {
+function parinferResultToCmChanges(result: ParinferResult, input: string): ChangeSpec[] {
   const parinferredText = result.text
   const diffs = presentableDiff(input, parinferredText)
   return diffs.map(change => {
@@ -109,37 +128,33 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
   const startState = transaction.startState
   const oldCursor = startState.selection.main.head
   const oldDoc = startState.doc
-  const [oldY, oldX] = cmPosToParinferYX(oldDoc, oldCursor)
+  const [oldY, oldX] = cmPosToParinferYx(oldDoc, oldCursor)
   const newDoc = transaction.newDoc
   const newText = newDoc.toString()
   const newSelection = transaction.newSelection.main
   const newCursor = newSelection.head
-  const [newY, newX] = cmPosToParinferYX(newDoc, newCursor)
-  const cmChanges = cmChangesetToParinferChanges(oldDoc, transaction.changes)
+  const [newY, newX] = cmPosToParinferYx(newDoc, newCursor)
+  const parinferChanges = cmChangesetToParinferChanges(oldDoc, transaction.changes)
   const selectionStartLine = !newSelection.empty ?
-    cmPosToParinferYX(newDoc, newSelection.from)[0] : undefined
-
+    cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined
   const result = parinfer.smartMode(newText, {
     prevCursorX: oldX,
     prevCursorLine: oldY,
     cursorX: newX,
     cursorLine: newY,
-    changes: cmChanges,
+    changes: parinferChanges,
     selectionStartLine
   })
-
   if (!result.success) {
     const effect = maybeErrorEffect(startState, result.error!)
     return effect ? { effects: [effect] } : null
   }
-
-  const parinferChanges = parinferResultToCmChanges(result, newText)
-  const newTransaction = startState.update({ changes: parinferChanges, filter: false })
+  const cmChanges = parinferResultToCmChanges(result, newText)
+  const newTransaction = transaction.state.update({ changes: cmChanges, filter: false })
   const newPos = parinferYxToCmPos(newTransaction.newDoc, result.cursorLine, result.cursorX)
-
   const effect = maybeErrorEffect(startState, null)
   return {
-    changes: parinferChanges,
+    changes: cmChanges,
     selection: EditorSelection.cursor(newPos),
     sequential: true,
     ... (effect ? {effects: [effect]} : null)
@@ -148,15 +163,15 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
 
 function parinferTransactionFilter() {
   return EditorState.transactionFilter.of(tr => {
-   if (tr.docChanged) {
-     const parinferChanges = applyParinferSmartWithDiff(tr)
-     if (parinferChanges) {
-       if (parinferChanges.effects || parinferChanges.changes) {
-         return [tr, parinferChanges]
-       }
-     }
-   }
-   return tr
+    if (tr.docChanged) {
+      const parinferChanges = applyParinferSmartWithDiff(tr)
+      if (parinferChanges) {
+        if (parinferChanges.effects || parinferChanges.changes) {
+          return [tr, parinferChanges]
+        }
+      }
+    }
+    return tr
 })}
 
 function errorToDiagnostics(doc: Text, error: ParinferError): Diagnostic[] {

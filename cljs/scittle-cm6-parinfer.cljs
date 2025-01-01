@@ -134,15 +134,13 @@
                                 :selectionStartLine selection-start-line})]
     (if (not (.-success result))
       {:effects (maybe-error-effect start-state (.-error result))}
-      (let [cursorX (.-cursorX result)
-            cursorLine (.-cursorLine result)
-            changes (parinfer-result->cm-changes result new-text)
+      (let [changes (parinfer-result->cm-changes result new-text)
             new-transaction (.update (.-state transaction) ; strongly discouraged because expensive
                                      (clj->js {:changes changes
                                                :filter false}))
             new-pos (parinfer-yx->cm-pos (.-newDoc new-transaction)
-                                         cursorLine
-                                         cursorX)]
+                                         (.-cursorLine result)
+                                         (.-cursorX result))]
         {:changes changes
          :selection (.cursor js/cm_state.EditorSelection new-pos)
          :sequential true

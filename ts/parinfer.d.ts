@@ -20,7 +20,7 @@ declare module 'parinfer' {
     endX: number;
   };
 
-  export type Change = {
+  export type ParinferChange = {
     lineNo: number;
     x: number;
     oldText: string;
@@ -36,7 +36,7 @@ declare module 'parinfer' {
     prevCursorLine?: number;
     prevCursorX?: number;
     selectionStartLine?: number;
-    changes?: Change[];
+    changes?: ParinferChange[];
     forceBalance?: boolean;
     partialResult?: boolean;
   }
@@ -51,7 +51,9 @@ declare module 'parinfer' {
     parenTrails?: ParenTrail[];
   }
 
-  export function smartMode(text: string, options?: ParinferOptions): ParinferResult;
-  export function indentMode(text: string, options?: ParinferOptions): ParinferResult;
-  export function parenMode(text: string, options?: ParinferOptions): ParinferResult;
+  export type Parinfer = {
+    smartMode(text: string, options?: ParinferOptions): ParinferResult;
+    indentMode(text: string, options?: ParinferOptions): ParinferResult;
+    parenMode(text: string, options?: ParinferOptions): ParinferResult;
+  }
 }
