@@ -9,6 +9,9 @@
     "codemirror6"
   ],
   "author": "Jurjan-Paul Medema",
+  "publishConfig": {
+   "access": "public"
+  },
   "files": [
     "dist/*"
   ],
