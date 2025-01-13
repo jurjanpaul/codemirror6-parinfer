@@ -1,17 +1,12 @@
-// Supports:
-// - Parinfer smartmode
-//
 // Does not (yet) support:
 // - styling parentrails
-// - importing as library
-// - turning off parinfer or switching to other modes
 
-import type { Parinfer, ParinferChange, ParinferResult, ParinferError } from "parinfer"
+import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
 
 declare global {
- interface Window {
-   parinfer?: Parinfer;
- }
+  interface Window {
+    parinfer?: Parinfer;
+  }
 }
 
 const getParinfer = async (): Promise<Parinfer> => {
@@ -25,28 +20,69 @@ const getParinfer = async (): Promise<Parinfer> => {
     throw new Error('Failed to load parinfer library: ' + error);
   }
 };
-const parinfer = await getParinfer();
+const parinfer_lib = await getParinfer();
 
 import type { ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state"
-import { ChangeSet, EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
-import { EditorView } from "@codemirror/view"
+import { ChangeSet, EditorSelection, EditorState, StateEffect, StateEffectType, StateField } from "@codemirror/state"
+import { EditorView, ViewUpdate } from "@codemirror/view"
 import type { Diagnostic } from "@codemirror/lint"
 import { setDiagnostics, forEachDiagnostic } from "@codemirror/lint"
 import { invertedEffects } from "@codemirror/commands"
 import { presentableDiff } from "@codemirror/merge"
 
-let effectIdCounter = 0
-
-interface Cm6ParinferError {
-  id: number
-  invertsId?: number
-  previous: ParinferError | null
-  current: ParinferError | null
+function filterTransactionEffects<T> (effectType: StateEffectType<T>, transaction: Transaction): StateEffect<T>[] {
+  return transaction.effects.filter(e => e.is(effectType))
 }
 
-const parinferErrorEffect = StateEffect.define<Cm6ParinferError>()
+export const setEnabledEffect = StateEffect.define<boolean>()
 
-const parinferErrorField = StateField.define<Cm6ParinferError>({
+const enabledField = StateField.define<boolean>({
+ create: () => true,
+ update: (value, tr) => {
+   const effect = filterTransactionEffects(setEnabledEffect, tr).at(-1)
+   return effect ? effect.value : value
+ }
+})
+
+export type ParinferMode = "smart" | "indent" | "paren"
+
+export const switchModeEffect = StateEffect.define<ParinferMode>()
+
+const modeField = StateField.define<ParinferMode>({
+  create: () => "smart",
+  update: (value, tr) => {
+    const effect = filterTransactionEffects(switchModeEffect, tr).at(-1)
+    return effect ? effect.value : value
+  }
+})
+
+let effectIdCounter = 0
+
+interface InvertibleFieldValue<T> {
+  id: number // for debugging only
+  invertsId?: number // for debugging only
+  previous: T | null
+  current: T | null
+}
+
+function invertInvertibleEffects(effectType: StateEffectType<InvertibleFieldValue<any>>, tr: Transaction):  StateEffect<InvertibleFieldValue<any>>[] {
+  const inverted: StateEffect<InvertibleFieldValue<any>>[] = []
+  const effects = tr.effects.filter(e => e.is(effectType))
+  effects.forEach(effect => {
+    const { id, previous, current } = effect.value
+    inverted.push(effectType.of({
+      id: ++effectIdCounter,
+      invertsId: id,
+      previous: current,
+      current: previous
+    }))
+  })
+  return inverted
+}
+
+const parinferErrorEffect = StateEffect.define<InvertibleFieldValue<ParinferError>>()
+
+const parinferErrorField = StateField.define<InvertibleFieldValue<ParinferError>>({
   create: () => ({
     id: ++effectIdCounter,
     previous: null,
@@ -59,18 +95,7 @@ const parinferErrorField = StateField.define<Cm6ParinferError>({
 })
 
 const invertParinferError = invertedEffects.of((tr) => {
-  const inverted: StateEffect<Cm6ParinferError>[] = []
-  const parinferErrors = tr.effects.filter(e => e.is(parinferErrorEffect))
-  parinferErrors.forEach(effect => {
-    const { id, previous, current } = effect.value
-    inverted.push(parinferErrorEffect.of({
-      id: ++effectIdCounter,
-      invertsId: id,
-      previous: current,
-      current: previous
-    }))
-  })
-  return inverted
+  return invertInvertibleEffects(parinferErrorEffect, tr);
 })
 
 function cmPosToParinferYx(doc: Text, pos: number): [number, number] {
@@ -112,7 +137,7 @@ function parinferResultToCmChanges(result: ParinferResult, input: string): Chang
   })
 }
 
-function maybeErrorEffect(startState: EditorState, parinferError: ParinferError | null): StateEffect<Cm6ParinferError> | null {
+function maybeErrorEffect(startState: EditorState, parinferError: ParinferError | null): StateEffect<InvertibleFieldValue<ParinferError>> | null {
   const existing = startState.field(parinferErrorField, false)?.current
   if (JSON.stringify(existing) !== JSON.stringify(parinferError)) {
     return parinferErrorEffect.of({
@@ -122,6 +147,17 @@ function maybeErrorEffect(startState: EditorState, parinferError: ParinferError 
     })
   }
   return null
+}
+
+function parinfer(mode: ParinferMode, text: string, opts: ParinferOptions): ParinferResult {
+  switch(mode) {
+    case "smart":
+      return parinfer_lib.smartMode(text, opts)
+    case "indent":
+      return parinfer_lib.indentMode(text, opts)
+    case "paren":
+      return parinfer_lib.parenMode(text, opts)
+  }
 }
 
 function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec | null {
@@ -135,16 +171,17 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
   const newCursor = newSelection.head
   const [newY, newX] = cmPosToParinferYx(newDoc, newCursor)
   const parinferChanges = cmChangesetToParinferChanges(oldDoc, transaction.changes)
-  const selectionStartLine = !newSelection.empty ?
-    cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined
-  const result = parinfer.smartMode(newText, {
-    prevCursorX: oldX,
-    prevCursorLine: oldY,
-    cursorX: newX,
-    cursorLine: newY,
-    changes: parinferChanges,
-    selectionStartLine
-  })
+  const selectionStartLine =
+    !newSelection.empty ? cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined
+  const result = parinfer(startState.field(modeField, false) || "smart",
+                          newText, {
+                            prevCursorX: oldX,
+                            prevCursorLine: oldY,
+                            cursorX: newX,
+                            cursorLine: newY,
+                            changes: parinferChanges,
+                            selectionStartLine
+                          })
   if (!result.success) {
     const effect = maybeErrorEffect(startState, result.error!)
     return effect ? { effects: [effect] } : null
@@ -163,7 +200,9 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
 
 function parinferTransactionFilter() {
   return EditorState.transactionFilter.of(tr => {
-    if (tr.docChanged) {
+    const aSetEnabledEffect = filterTransactionEffects(setEnabledEffect, tr).at(-1)
+    if ((tr.startState.field(enabledField, false) && tr.docChanged) ||
+        (aSetEnabledEffect && aSetEnabledEffect.value)) {
       const parinferChanges = applyParinferSmartWithDiff(tr)
       if (parinferChanges) {
         if (parinferChanges.effects || parinferChanges.changes) {
@@ -197,24 +236,45 @@ function otherDiagnostics(state: EditorState): Diagnostic[] {
   return others
 }
 
+function hasEffectOfType(effectType: StateEffectType<any>, update: ViewUpdate): boolean {
+ return update.transactions.some(tr => {
+   return tr.effects.some(e => e.is(effectType))
+ })
+}
+
 function parinferViewUpdateListener() {
   return EditorView.updateListener.of(update => {
-   if (update.docChanged) {
-     const state = update.state
-     const parinferError = state.field(parinferErrorField)
-     const parinferDiagnostics: Diagnostic[] = parinferError.current ?
-      errorToDiagnostics(state.doc, parinferError.current) : []
-     const diagnosticTr = setDiagnostics(state, [
-      ...parinferDiagnostics,
-      ...otherDiagnostics(state)
-     ])
-     update.view.dispatch(diagnosticTr)
+    if (hasEffectOfType(setEnabledEffect, update) || update.docChanged) {
+      const state = update.state
+      const enabled = state.field(enabledField, false)
+      const parinferError = state.field(parinferErrorField)
+      const parinferDiagnostics: Diagnostic[] =
+        (enabled && parinferError.current) ? errorToDiagnostics(state.doc, parinferError.current)
+                                           : []
+      const diagnosticTr = setDiagnostics(state,
+                                          [...parinferDiagnostics,
+                                           ...otherDiagnostics(state)])
+      update.view.dispatch(diagnosticTr)
     }
   })
 }
 
+export function switchMode(view: EditorView, mode: ParinferMode): void {
+  view.dispatch({effects: switchModeEffect.of(mode)})
+}
+
+export function disableParinfer(view: EditorView): void {
+  view.dispatch({effects: setEnabledEffect.of(false)})
+}
+
+export function enableParinfer(view: EditorView): void {
+  view.dispatch({effects: setEnabledEffect.of(true)})
+}
+
 export function parinferExtension() {
   return [
+    enabledField,
+    modeField,
     parinferErrorField,
     invertParinferError,
     parinferTransactionFilter(),

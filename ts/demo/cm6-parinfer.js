@@ -1,10 +1,5 @@
-// Supports:
-// - Parinfer smartmode
-//
 // Does not (yet) support:
 // - styling parentrails
-// - importing as library
-// - turning off parinfer or switching to other modes
 const getParinfer = async () => {
     if (window.parinfer) {
         return window.parinfer;
@@ -17,13 +12,46 @@ const getParinfer = async () => {
         throw new Error('Failed to load parinfer library: ' + error);
     }
 };
-const parinfer = await getParinfer();
-import { ChangeSet, EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+const parinfer_lib = await getParinfer();
+import { ChangeSet, EditorSelection, EditorState, StateEffect, StateEffectType, StateField } from "@codemirror/state";
+import { EditorView, ViewUpdate } from "@codemirror/view";
 import { setDiagnostics, forEachDiagnostic } from "@codemirror/lint";
 import { invertedEffects } from "@codemirror/commands";
 import { presentableDiff } from "@codemirror/merge";
+function filterTransactionEffects(effectType, transaction) {
+    return transaction.effects.filter(e => e.is(effectType));
+}
+export const setEnabledEffect = StateEffect.define();
+const enabledField = StateField.define({
+    create: () => true,
+    update: (value, tr) => {
+        const effect = filterTransactionEffects(setEnabledEffect, tr).at(-1);
+        return effect ? effect.value : value;
+    }
+});
+export const switchModeEffect = StateEffect.define();
+const modeField = StateField.define({
+    create: () => "smart",
+    update: (value, tr) => {
+        const effect = filterTransactionEffects(switchModeEffect, tr).at(-1);
+        return effect ? effect.value : value;
+    }
+});
 let effectIdCounter = 0;
+function invertInvertibleEffects(effectType, tr) {
+    const inverted = [];
+    const effects = tr.effects.filter(e => e.is(effectType));
+    effects.forEach(effect => {
+        const { id, previous, current } = effect.value;
+        inverted.push(effectType.of({
+            id: ++effectIdCounter,
+            invertsId: id,
+            previous: current,
+            current: previous
+        }));
+    });
+    return inverted;
+}
 const parinferErrorEffect = StateEffect.define();
 const parinferErrorField = StateField.define({
     create: () => ({
@@ -37,18 +65,7 @@ const parinferErrorField = StateField.define({
     }
 });
 const invertParinferError = invertedEffects.of((tr) => {
-    const inverted = [];
-    const parinferErrors = tr.effects.filter(e => e.is(parinferErrorEffect));
-    parinferErrors.forEach(effect => {
-        const { id, previous, current } = effect.value;
-        inverted.push(parinferErrorEffect.of({
-            id: ++effectIdCounter,
-            invertsId: id,
-            previous: current,
-            current: previous
-        }));
-    });
-    return inverted;
+    return invertInvertibleEffects(parinferErrorEffect, tr);
 });
 function cmPosToParinferYx(doc, pos) {
     const line = doc.lineAt(pos);
@@ -93,6 +110,16 @@ function maybeErrorEffect(startState, parinferError) {
     }
     return null;
 }
+function parinfer(mode, text, opts) {
+    switch (mode) {
+        case "smart":
+            return parinfer_lib.smartMode(text, opts);
+        case "indent":
+            return parinfer_lib.indentMode(text, opts);
+        case "paren":
+            return parinfer_lib.parenMode(text, opts);
+    }
+}
 function applyParinferSmartWithDiff(transaction) {
     const startState = transaction.startState;
     const oldCursor = startState.selection.main.head;
@@ -104,9 +131,8 @@ function applyParinferSmartWithDiff(transaction) {
     const newCursor = newSelection.head;
     const [newY, newX] = cmPosToParinferYx(newDoc, newCursor);
     const parinferChanges = cmChangesetToParinferChanges(oldDoc, transaction.changes);
-    const selectionStartLine = !newSelection.empty ?
-        cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined;
-    const result = parinfer.smartMode(newText, {
+    const selectionStartLine = !newSelection.empty ? cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined;
+    const result = parinfer(startState.field(modeField, false) || "smart", newText, {
         prevCursorX: oldX,
         prevCursorLine: oldY,
         cursorX: newX,
@@ -126,7 +152,9 @@ function applyParinferSmartWithDiff(transaction) {
 }
 function parinferTransactionFilter() {
     return EditorState.transactionFilter.of(tr => {
-        if (tr.docChanged) {
+        const aSetEnabledEffect = filterTransactionEffects(setEnabledEffect, tr).at(-1);
+        if ((tr.startState.field(enabledField, false) && tr.docChanged) ||
+            (aSetEnabledEffect && aSetEnabledEffect.value)) {
             const parinferChanges = applyParinferSmartWithDiff(tr);
             if (parinferChanges) {
                 if (parinferChanges.effects || parinferChanges.changes) {
@@ -158,23 +186,38 @@ function otherDiagnostics(state) {
     });
     return others;
 }
+function hasEffectOfType(effectType, update) {
+    return update.transactions.some(tr => {
+        return tr.effects.some(e => e.is(effectType));
+    });
+}
 function parinferViewUpdateListener() {
     return EditorView.updateListener.of(update => {
-        if (update.docChanged) {
+        if (hasEffectOfType(setEnabledEffect, update) || update.docChanged) {
             const state = update.state;
+            const enabled = state.field(enabledField, false);
             const parinferError = state.field(parinferErrorField);
-            const parinferDiagnostics = parinferError.current ?
-                errorToDiagnostics(state.doc, parinferError.current) : [];
-            const diagnosticTr = setDiagnostics(state, [
-                ...parinferDiagnostics,
-                ...otherDiagnostics(state)
-            ]);
+            const parinferDiagnostics = (enabled && parinferError.current) ? errorToDiagnostics(state.doc, parinferError.current)
+                : [];
+            const diagnosticTr = setDiagnostics(state, [...parinferDiagnostics,
+                ...otherDiagnostics(state)]);
             update.view.dispatch(diagnosticTr);
         }
     });
 }
+export function switchMode(view, mode) {
+    view.dispatch({ effects: switchModeEffect.of(mode) });
+}
+export function disableParinfer(view) {
+    view.dispatch({ effects: setEnabledEffect.of(false) });
+}
+export function enableParinfer(view) {
+    view.dispatch({ effects: setEnabledEffect.of(true) });
+}
 export function parinferExtension() {
     return [
+        enabledField,
+        modeField,
         parinferErrorField,
         invertParinferError,
         parinferTransactionFilter(),

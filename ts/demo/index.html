@@ -37,7 +37,8 @@
           "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.7.4/dist/index.js",
           "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.2/src/style-mod.js",
           "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js",
-          "@jurjanpaul/codemirror6-parinfer": "./cm6-parinfer.js"
+          "@jurjanpaul/codemirror6-parinfer": "./cm6-parinfer.js",
+          "_@jurjanpaul/codemirror6-parinfer": "https://cdn.jsdelivr.net/npm/@jurjanpaul/codemirror6-parinfer@latest/dist/cm6-parinfer.js"
         }
       }
     </script>
@@ -68,6 +69,20 @@
     <h1>Parinfer in CodeMirror 6 demo</h1>
     <h5>compiled TypeScript module invoked from <a href="https://babashka.org/scittle/">Scittle</a></h5>
     <div id="editor"></div>
+    <div style="margin-bottom:1em;text-align:right;">
+     <form>
+       <p>
+         <input type="checkbox" id="parinfer-enabled" checked onchange="set_parinfer_enabled(this.checked);" style="font-size:0.8em;font-weight: bolder;">Parinfer enabled</input>
+         &nbsp;
+         <label for="parinfer-mode" style="font-size:0.8em;font-weight: bolder;">Mode:</label>
+         <select id="parinfer-mode" onchange="switch_parinfer_mode(this.value);">
+           <option value="indent">Parinfer Indent mode</option>
+           <option value="paren">Parinfer Paren mode</option>
+           <option value="smart" selected>Parinfer Smart mode</option>
+         </select>
+        </p>
+     </form>
+   </div>
     <p>Experience <a href="https://shaunlebron.github.io/parinfer/">Parinfer</a> by typing Clojure code, pasting, indenting, deindenting and deleting code. Undo and redo work as they should.</p>
     <p>Just like with <a href="https://github.com/nextjournal/clojure-mode">Nextjournal's CodeMirror 6 Clojure Mode</a> you can see that this still works fast (enough...?) with a large body of code, like <a href="https://raw.githubusercontent.com/clojure/clojure/refs/heads/master/src/clj/clojure/core.clj">clojure/core.clj</a>.</p>
   </body>

@@ -17,8 +17,9 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), w
 - [ ] Mark `parenTrails` (for completeness only; I can live without)
 - [ ] Refactor (constantly of course)
 - [ ] Examine interaction with other CodeMirror extensions
-- [ ] Make into a published JS library
-  - [ ] Options to configure/toggle
+- [x] Make into a published JS library
+  - [x] Options to configure/toggle
+    - [ ] Allow enabling with option to not immediately 'fix' the code automatically.
 - [ ] Optimise?
   - [x] Use [CodeMirror's diff function](https://github.com/codemirror/merge?tab=readme-ov-file#user-content-diff) instead of [diff-match-patch](https://github.com/google/diff-match-patch)
 

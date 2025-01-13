@@ -1,10 +1,5 @@
-;; Supports:
-;; - Parinfer smartmode
-;;
 ;; Does not (yet) support:
 ;; - styling parentrails
-;; - importing as library
-;; - turning off parinfer or switching to other modes
 
 (def effect-id-counter (atom 0))
 
@@ -12,26 +7,59 @@
   (swap! effect-id-counter inc))
 
 (defn debug [label v]
-  ;(println label (js->clj v))
+  ;; (println label (js->clj v))
   v)
+
+(defn filter-transaction-effects
+  [effect-type tr]
+  (->> (.-effects tr)
+       (filter #(.is % effect-type))))
+
+(def set-enabled-effect
+  (.define js/cm_state.StateEffect))
+
+(def ^:private enabled-field
+  (.define js/cm_state.StateField
+           #js{"create"
+               (fn []
+                 true)
+               "update"
+               (fn [value, tr]
+                 (if-let [a-set-enabled-effect
+                          (->> (filter-transaction-effects set-enabled-effect tr) last)]
+                   (.-value a-set-enabled-effect)
+                   value))}))
+
+(def switch-mode-effect
+ (.define js/cm_state.StateEffect))
+
+(def ^:private mode-field
+  (.define js/cm_state.StateField
+           #js{"create"
+               (fn []
+                 "smart")
+               "update"
+               (fn [value, tr]
+                 (if-let [a-switch-mode-effect
+                          (->> (filter-transaction-effects switch-mode-effect tr) last)]
+                   (.-value a-switch-mode-effect)
+                   value))}))
 
 (def ^:private parinfer-error-effect
   (.define js/cm_state.StateEffect))
+
 
 (def ^:private parinfer-error-field
   (.define js/cm_state.StateField
            #js{"create"
                (fn []
-                 (debug "create"
-                        {:id (next-effect-id)
-                         :previous nil
-                         :current nil}))
+                 {:id (next-effect-id)
+                  :previous nil
+                  :current nil})
                "update"
                (fn [value, tr]
                  (if-let [a-parinfer-error-effect
-                          (->> (.-effects tr)
-                               (filter #(.is % parinfer-error-effect))
-                               last)]
+                          (->> (filter-transaction-effects parinfer-error-effect tr) last)]
                    (.-value a-parinfer-error-effect)
                    value))}))
 
@@ -39,10 +67,9 @@
   (.of js/cm_commands.invertedEffects
        (fn [tr]
          (let [inverted #js[]
-               parinfer-errors
-               (->> (.-effects tr)
-                    (filter #(.is % parinfer-error-effect)))]
-           (doseq [effect parinfer-errors
+               parinfer-error-effects
+               (filter-transaction-effects parinfer-error-effect tr)]
+           (doseq [effect parinfer-error-effects
                    :let [{:keys [id previous current]} (.-value effect)]]
              (.push inverted
                     (.of parinfer-error-effect
@@ -107,6 +134,13 @@
                    :previous existing-parinfer-error
                    :current parinfer-error})))))
 
+(defn parinfer
+   [mode text opts]
+   (case mode
+     "smart" (.smartMode js/parinfer text opts)
+     "indent" (.indentMode js/parinfer text opts)
+     "paren" (.parenMode js/parinfer text opts)))
+
 (defn- apply-parinfer-smart-with-diff
   [transaction]
   (let [start-state (.-startState transaction)
@@ -124,14 +158,14 @@
         (when-not (.-empty new-selection)
            (-> (cm-pos->parinfer-yx new-doc (.-from new-selection))
                first))
-        result (.smartMode js/parinfer
-                           new-text
-                           #js {:prevCursorX old-x
-                                :prevCursorLine old-y
-                                :cursorX new-x
-                                :cursorLine new-y
-                                :changes changes
-                                :selectionStartLine selection-start-line})]
+        result (parinfer (or (.field start-state mode-field false) "smart")
+                         new-text
+                         #js{:prevCursorX old-x
+                             :prevCursorLine old-y
+                             :cursorX new-x
+                             :cursorLine new-y
+                             :changes changes
+                             :selectionStartLine selection-start-line})]
     (if (not (.-success result))
       {:effects (maybe-error-effect start-state (.-error result))}
       (let [changes (parinfer-result->cm-changes result new-text)
@@ -146,17 +180,24 @@
          :sequential true
          :effects (maybe-error-effect start-state nil)}))))
 
+(defn- enabled? [state]
+  (.field state enabled-field false))
+
 (defn- parinfer-transaction-filter []
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
-         (if (.-docChanged transaction)
-           (let [{:keys [effects changes] :as parinfer-changes}
-                 (apply-parinfer-smart-with-diff transaction)]
-             (if (or effects (seq (js->clj changes)))
-               #js[transaction
-                   (clj->js parinfer-changes)]
-               transaction))
-           transaction))))
+         (let [a-set-enabled-effect
+               (->> (filter-transaction-effects set-enabled-effect transaction) last)]
+           (if (or (and (enabled? (.-startState transaction))
+                        (.-docChanged transaction))
+                   (and a-set-enabled-effect (.-value a-set-enabled-effect)))
+             (let [{:keys [effects changes] :as parinfer-changes}
+                   (apply-parinfer-smart-with-diff transaction)]
+               (if (or effects (seq (js->clj changes)))
+                 #js[transaction
+                     (clj->js parinfer-changes)]
+                 transaction))
+             transaction)))))
 
 (defn- error->diagnostics
   [doc {:strs [x lineNo extra message] :as _error}]
@@ -183,22 +224,47 @@
 (defn- parinfer-view-update-listener []
   (.of (.-updateListener js/cm_view.EditorView)
        (fn [update]
-         (when (.-docChanged update)
-           (let [state (.-state update)
-                 {:keys [_previous current] :as _parinfer-error}
-                 (.field state parinfer-error-field)
-                 parinfer-diagnostics (if current
-                                        (error->diagnostics (.-doc state)
-                                                            (js->clj current))
-                                        #js[])
-                 diagnostic-tr
-                 (js/cm_lint.setDiagnostics state
-                                            (.concat parinfer-diagnostics
-                                                     (other-diagnostics state)))]
-             (.dispatch (.-view update) diagnostic-tr))))))
+         (let [last-set-enabled-effect
+               (->> (mapcat (partial filter-transaction-effects set-enabled-effect)
+                            (.-transactions update))
+                    last)]
+           (when (or (.-docChanged update)
+                     last-set-enabled-effect)
+             (let [state (.-state update)
+                   enabled? (.field state enabled-field false)
+                   error (:current (.field state parinfer-error-field))
+                   parinfer-diagnostics (if (and enabled? error)
+                                          (error->diagnostics (.-doc state)
+                                                              (js->clj error))
+                                          #js[])
+                   diagnostic-tr
+                   (js/cm_lint.setDiagnostics state
+                                              (.concat parinfer-diagnostics
+                                                       (other-diagnostics state)))]
+               (.dispatch (.-view update) diagnostic-tr)))))))
+
+
+;; exports
+
+;; - set-enabled-effect
+;; - switch-mode-effect
+
+(defn switch-mode
+  [editor-view mode]
+  (.dispatch editor-view #js{:effects (.of switch-mode-effect mode)}))
+
+(defn disable-parinfer
+  [editor-view]
+  (.dispatch editor-view #js{:effects (.of set-enabled-effect false)}))
+
+(defn enable-parinfer
+  [editor-view]
+  (.dispatch editor-view #js{:effects (.of set-enabled-effect true)}))
 
 (defn parinfer-extension []
-  #js[parinfer-error-field
+  #js[enabled-field
+      mode-field
+      parinfer-error-field
       invert-parinfer-error
       (parinfer-transaction-filter)
       (parinfer-view-update-listener)])

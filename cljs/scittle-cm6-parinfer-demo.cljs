@@ -19,3 +19,16 @@
 
 (def cm-editor
   (create-editor initial-doc))
+
+(defn switch-parinfer-mode
+  [value]
+  (switch-mode cm-editor value))
+
+(defn set-parinfer-enabled
+  [v]
+  (if v
+    (enable-parinfer cm-editor)
+    (disable-parinfer cm-editor)))
+
+(aset js/window "switch_parinfer_mode" switch-parinfer-mode)
+(aset js/window "set_parinfer_enabled" set-parinfer-enabled)
