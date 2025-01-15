@@ -5,22 +5,22 @@ import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, Parinfe
 
 declare global {
   interface Window {
-    parinfer?: Parinfer;
+    parinfer?: Parinfer
   }
 }
 
 const getParinfer = async (): Promise<Parinfer> => {
   if (window.parinfer) {
-    return window.parinfer;
+    return window.parinfer
   }
   try {
-    const module = await import('parinfer');
-    return (module.default || module) as Parinfer;
+    const module = await import('parinfer')
+    return (module.default || module) as Parinfer
   } catch (error) {
-    throw new Error('Failed to load parinfer library: ' + error);
+    throw new Error('Failed to load parinfer library: ' + error)
   }
-};
-const parinfer_lib = await getParinfer();
+}
+const parinfer_lib = await getParinfer()
 
 import type { ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { ChangeSet, EditorSelection, EditorState, StateEffect, StateEffectType, StateField } from "@codemirror/state"
@@ -34,6 +34,9 @@ function filterTransactionEffects<T> (effectType: StateEffectType<T>, transactio
   return transaction.effects.filter(e => e.is(effectType))
 }
 
+/**
+ * Effect to set the enabled state.
+ */
 export const setEnabledEffect = StateEffect.define<boolean>()
 
 const enabledField = StateField.define<boolean>({
@@ -44,8 +47,14 @@ const enabledField = StateField.define<boolean>({
  }
 })
 
+/**
+ * Type representing a Parinfer mode.
+ */
 export type ParinferMode = "smart" | "indent" | "paren"
 
+/**
+ * Effect to switch the Parinfer mode.
+ */
 export const switchModeEffect = StateEffect.define<ParinferMode>()
 
 const modeField = StateField.define<ParinferMode>({
@@ -95,7 +104,7 @@ const parinferErrorField = StateField.define<InvertibleFieldValue<ParinferError>
 })
 
 const invertParinferError = invertedEffects.of((tr) => {
-  return invertInvertibleEffects(parinferErrorEffect, tr);
+  return invertInvertibleEffects(parinferErrorEffect, tr)
 })
 
 function cmPosToParinferYx(doc: Text, pos: number): [number, number] {
@@ -214,9 +223,9 @@ function parinferTransactionFilter() {
 })}
 
 function errorToDiagnostics(doc: Text, error: ParinferError): Diagnostic[] {
-  const { x, lineNo, extra, message } = error;
-  const pos = parinferYxToCmPos(doc, lineNo, x);
-  const extraDiagnostics: Diagnostic[] = extra ? errorToDiagnostics(doc, extra) : [];
+  const { x, lineNo, extra, message } = error
+  const pos = parinferYxToCmPos(doc, lineNo, x)
+  const extraDiagnostics: Diagnostic[] = extra ? errorToDiagnostics(doc, extra) : []
   return [{
     severity: "error",
     source: "parinfer",
@@ -232,7 +241,7 @@ function otherDiagnostics(state: EditorState): Diagnostic[] {
     if (d.source !== "parinfer") {
       others.push(d)
     }
-  });
+  })
   return others
 }
 
@@ -259,18 +268,34 @@ function parinferViewUpdateListener() {
   })
 }
 
+/**
+ * Switches the Parinfer mode for the provided editor view.
+ * @param view the editor view
+ * @param mode the Parinfer mode to switch to
+ */
 export function switchMode(view: EditorView, mode: ParinferMode): void {
   view.dispatch({effects: switchModeEffect.of(mode)})
 }
 
+/**
+ * Disables Parinfer for the provided editor view.
+ * @param view the editor view
+ */
 export function disableParinfer(view: EditorView): void {
   view.dispatch({effects: setEnabledEffect.of(false)})
 }
 
+/**
+ * Enables Parinfer for the provided editor view.
+ * @param view the editor view
+ */
 export function enableParinfer(view: EditorView): void {
   view.dispatch({effects: setEnabledEffect.of(true)})
 }
 
+/**
+ * @returns the CodeMirror6 Parinfer extension in the form of an array of extensions
+ */
 export function parinferExtension() {
   return [
     enabledField,
