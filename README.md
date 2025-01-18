@@ -33,7 +33,9 @@ new EditorView({
 ```
 
 ## Motivation
-I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make available a Parinfer extension for it. For quite a while, as a Clojure programmer I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
+I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available. 
+
+For quite a while, as a Clojure programmer I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
 
 
 ## Some experiences and observations
