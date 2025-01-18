@@ -1,6 +1,6 @@
 {
   "name": "@jurjanpaul/codemirror6-parinfer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Parinfer integration for CodeMirror 6",
   "license": "MIT",
   "type": "module",
