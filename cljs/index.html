@@ -35,8 +35,7 @@
           "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.35.3/dist/index.js",
           "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.7.4/dist/index.js",
           "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.2/src/style-mod.js",
-          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js",
-          "@jurjanpaul/codemirror6-parinfer": "https://cdn.jsdelivr.net/npm/@jurjanpaul/codemirror6-parinfer@latest/dist/cm6-parinfer.min.js"
+          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
         }
       }
     </script>
@@ -49,7 +48,6 @@
       import * as cm_state from '@codemirror/state';
       import * as cm_merge from '@codemirror/merge';
       import * as lang_clojure from '@nextjournal/lang-clojure'
-      import * as codemirror6_parinfer from '@jurjanpaul/codemirror6-parinfer'
       globalThis.codemirror = codemirror;
       globalThis.cm_commands = cm_commands;
       globalThis.cm_language = cm_language;
@@ -58,27 +56,27 @@
       globalThis.cm_view = cm_view;
       globalThis.cm_merge = cm_merge;
       globalThis.lang_clojure = lang_clojure;
-      globalThis.codemirror6_parinfer = codemirror6_parinfer;
       scittle.core.eval_script_tags();
     </script>
-    <script type="application/x-scittle" src="cm6-parinfer-module-demo.cljs"></script>
+    <script type="application/x-scittle" src="scittle-cm6-parinfer.cljs"></script>
+    <script type="application/x-scittle" src="scittle-cm6-parinfer-demo.cljs"></script>
   </head>
   <body>
-    <h5>Compiled TypeScript module invoked from ClojureScript in Scittle</h5>
+    <h5>All ClojureScript code in Scittle</h5>
     <div id="editor"></div>
     <div style="margin-bottom:1em;text-align:right;">
-     <form>
-       <p>
-         <input type="checkbox" id="parinfer-enabled" checked onchange="set_parinfer_enabled(this.checked);" style="font-size:0.8em;font-weight: bolder;">Parinfer enabled</input>
-         &nbsp;
-         <label for="parinfer-mode" style="font-size:0.8em;font-weight: bolder;">Mode:</label>
-         <select id="parinfer-mode" onchange="switch_parinfer_mode(this.value);">
-           <option value="indent">Parinfer Indent mode</option>
-           <option value="paren">Parinfer Paren mode</option>
-           <option value="smart" selected>Parinfer Smart mode</option>
-         </select>
-        </p>
-     </form>
-   </div>
+      <form>
+        <p>
+          <input type="checkbox" id="parinfer-enabled" checked onchange="set_parinfer_enabled(this.checked);" style="font-size:0.8em;font-weight: bolder;">Parinfer enabled</input>
+          &nbsp;
+          <label for="parinfer-mode" style="font-size:0.8em;font-weight: bolder;">Mode:</label>
+          <select id="parinfer-mode" onchange="switch_parinfer_mode(this.value);">
+            <option value="indent">Parinfer Indent mode</option>
+            <option value="paren">Parinfer Paren mode</option>
+            <option value="smart" selected>Parinfer Smart mode</option>
+          </select>
+         </p>
+      </form>
+    </div>
   </body>
 </html>

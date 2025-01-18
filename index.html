@@ -1,86 +1,14 @@
 <html>
-  <!--
-    Adapted from https://github.com/babashka/scittle/blob/main/resources/public/codemirror.html
-    Note the addition of both the parinfer and diff-match-patch libraries.
-  -->
   <head>
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.6.1/dist/es-module-shims.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.js"></script>
-    <script>scittle.core.disable_auto_eval();</script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.reagent.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.re-frame.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/scittle@0.6.20/dist/scittle.promesa.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/parinfer@3.13.1/parinfer.min.js"></script>
-
-    <script type="importmap">
-      {
-        "imports": {
-          "codemirror": "https://cdn.jsdelivr.net/npm/codemirror@6.0.1/dist/index.js",
-          "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.7.1/dist/index.js",
-          "@codemirror/search": "https://cdn.jsdelivr.net/npm/@codemirror/search@6.5.8/dist/index.js",
-          "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.18.3/dist/index.js",
-          "@codemirror/lint": "https://cdn.jsdelivr.net/npm/@codemirror/lint@6.8.4/dist/index.js",
-          "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.6/index.js",
-          "@nextjournal/lang-clojure": "https://cdn.jsdelivr.net/npm/@nextjournal/lang-clojure@1.0.0/dist/index.js",
-          "@nextjournal/lezer-clojure": "https://cdn.jsdelivr.net/npm/@nextjournal/lezer-clojure@1.0.0/dist/index.es.js",
-          "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.1/dist/index.js",
-          "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.2/dist/index.js",
-          "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.2.3/dist/index.js",
-          "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.7.1/dist/index.js",
-          "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.10.6/dist/index.js",
-          "@codemirror/lint": "https://cdn.jsdelivr.net/npm/@codemirror/lint@6.8.4/dist/index.js",
-          "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.2",
-          "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.5.0/dist/index.js",
-          "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.35.3/dist/index.js",
-          "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.7.4/dist/index.js",
-          "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.2/src/style-mod.js",
-          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
-        }
-      }
-    </script>
-    <script type="module">
-      import * as codemirror from 'codemirror';
-      import * as cm_commands from '@codemirror/commands';
-      import * as cm_language from '@codemirror/language';
-      import * as cm_lint from '@codemirror/lint';
-      import * as cm_view from '@codemirror/view';
-      import * as cm_state from '@codemirror/state';
-      import * as cm_merge from '@codemirror/merge';
-      import * as lang_clojure from '@nextjournal/lang-clojure'
-      globalThis.codemirror = codemirror;
-      globalThis.cm_commands = cm_commands;
-      globalThis.cm_language = cm_language;
-      globalThis.cm_lint = cm_lint;
-      globalThis.cm_state = cm_state;
-      globalThis.cm_view = cm_view;
-      globalThis.cm_merge = cm_merge;
-      globalThis.lang_clojure = lang_clojure;
-      scittle.core.eval_script_tags();
-    </script>
-    <script type="application/x-scittle" src="cljs/scittle-cm6-parinfer.cljs"></script>
-    <script type="application/x-scittle" src="cljs/scittle-cm6-parinfer-demo.cljs"></script>
   </head>
   <body>
     <h1>Parinfer in CodeMirror 6 demo</h1>
-    <h5>Fully powered by <a href="https://babashka.org/scittle/">Scittle</a></h5>
-    <div id="editor"></div>
-    <div style="margin-bottom:1em;text-align:right;">
-      <form>
-        <p>
-          <input type="checkbox" id="parinfer-enabled" checked onchange="set_parinfer_enabled(this.checked);" style="font-size:0.8em;font-weight: bolder;">Parinfer enabled</input>
-          &nbsp;
-          <label for="parinfer-mode" style="font-size:0.8em;font-weight: bolder;">Mode:</label>
-          <select id="parinfer-mode" onchange="switch_parinfer_mode(this.value);">
-            <option value="indent">Parinfer Indent mode</option>
-            <option value="paren">Parinfer Paren mode</option>
-            <option value="smart" selected>Parinfer Smart mode</option>
-          </select>
-         </p>
-      </form>
-    </div>
-    <p>Experience <a href="https://shaunlebron.github.io/parinfer/">Parinfer</a> by typing Clojure code, pasting, indenting, deindenting and deleting code. Undo and redo work as they should.</p>
-    <p>Just like with <a href="https://github.com/nextjournal/clojure-mode">Nextjournal's CodeMirror 6 Clojure Mode</a> you can see that this still works fast (enough...?) with a large body of code, like <a href="https://raw.githubusercontent.com/clojure/clojure/refs/heads/master/src/clj/clojure/core.clj">clojure/core.clj</a>.</p>
+    <p><iframe style="width:100%;min-height:fit-content;border:2px solid grey;" src="ts/demo/index.html"></iframe></p>
+    <p><iframe style="width:100%;min-height:fit-content;border:2px solid grey;" src="cljs/index.html"></iframe></p>
+    <p>Experience Parinfer by typing Clojure code, pasting, indenting, deindenting and deleting code. Undo and redo work as they should.</p>
+    <p>Just like with Nextjournal's CodeMirror 6 Clojure Mode you can see that this still works fast (enough...?) with a large body of code, like <a href="https://raw.githubusercontent.com/clojure/clojure/refs/heads/master/src/clj/clojure/core.clj">clojure/core.clj</a>.</p>
+    <p style="margin-top:2em;font-style: italic;">
+     Powered by <a href="https://codemirror.net/">CodeMirror 6</a>, <a href="https://shaunlebron.github.io/parinfer/">Parinfer</a>, <a href="https://babashka.org/scittle/">Scittle</a>, <a href="https://github.com/nextjournal/clojure-mode">Nextjournal's CodeMirror 6 Clojure Mode</a> and the <a href="https://github.com/jurjanpaul/codemirror6-parinfer">codemirror6-parinfer extension</a>.
+    </p>
   </body>
 </html>

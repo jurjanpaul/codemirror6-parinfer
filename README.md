@@ -1,38 +1,42 @@
-# Parinfer in CodeMirror 6 demo
+# Parinfer in CodeMirror 6
 
-Combines [Parinfer](https://shaunlebron.github.io/parinfer/) with [CodeMirror 6](https://codemirror.net/) using [Scittle](https://babashka.org/scittle/), building on [Scittle's CodeMirror example](https://babashka.org/scittle/codemirror.html).
+<span><a href="https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer" title="NPM version badge"><img src="https://img.shields.io/npm/v/@jurjanpaul/codemirror6-parinfer?color=blue" alt="NPM version badge" /></a></span>
 
-Getting there, but this is still very much a work in progress, nowhere near a published library.
+A [CodeMirror 6](https://codemirror.net/) extension that integrates [Parinfer](https://shaunlebron.github.io/parinfer/), providing automatic structural editing of Lisp code based on indentation, specifically for Clojure.
+
+By default [`smartMode`](https://github.com/parinfer/parinfer.js/tree/master#status-update-2019-smart-mode) is applied, but both `indentMode` and `parenMode` can be selected as well. (For now the extension does not support styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail).)
+
+initially I used ClojureScript on [Scittle](https://babashka.org/scittle/) to explore what was needed to get the integration to work, but the actual extension is written in TypeScript and available from [npmjs.com](https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer).
 
 Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), which also uses [Nextjournal's Clojure syntax support for CodeMirror 6](https://github.com/nextjournal/lang-clojure).
 
-## TODO
-- [x] `smartMode` Parinfer
-- [x] Highlight any errors (step 4 in [Adding Parinfer to an Editor](https://github.com/parinfer/parinfer.js/blob/master/doc/integrating.md))
-  - [x] Fix undo/redo
-    - [x] Understand and fix race condition in case backspace and/or Ctrl-Z is kept pressed in.
-  - [x] Leave other effects alone
-- [x] Take special care of selections
-- [x] Pin all dependencies (lesson learned after breaking change, but with obvious drawbacks)
-- [ ] Mark `parenTrails` (for completeness only; I can live without)
-- [ ] Refactor (constantly of course)
-- [ ] Examine interaction with other CodeMirror extensions
-- [x] Make into a published JS library
-  - [x] Options to configure/toggle
-    - [ ] Allow enabling with option to not immediately 'fix' the code automatically.
-- [ ] Optimise?
-  - [x] Use [CodeMirror's diff function](https://github.com/codemirror/merge?tab=readme-ov-file#user-content-diff) instead of [diff-match-patch](https://github.com/google/diff-match-patch)
+Please let me know if you have a use for this or have any feedback!
+
+## Basic usage
+```
+import { basicSetup } from 'codemirror';
+import { EditorState } from '@codemirror/state';
+import { EditorView } from '@codemirror/view';
+import { parinferExtension } from '@jurjanpaul/codemirror6-parinfer';
+
+const doc = `
+(defn foo []
+  [:bar \"baz\"])`
+
+new EditorView({
+  state: EditorState.create({
+    doc,
+    extensions: [basicSetup, parinferExtension()],
+  }),
+  parent: document.getElementById("editor");
+});
+```
 
 ## Motivation
-If I ever hope to upgrade the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) from CodeMirror 5 to CodeMirror 6, I need Parinfer integration, which nobody seems to have made available for CodeMirror 6 yet. (This is noteworthy because Parinfer was originally developed on CodeMirror and version 6, a complete rewrite, has been out for a number of years now.)
+I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make available a Parinfer extension for it. For quite a while I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
 
-But even if that upgrade never happens, I hope that this may be a small contribution/inspiration to keeping Parinfer a viable option for editing Clojure/Lisp across as many different editor(component)s as possible, because I heavily depend on its integration in other editors. 🙂
 
-(Clojure developers are encouraged to do structural editing with Paredit. By all means, go for it! I know I’m in a tiny minority, but making edits with these elaborate key combinations does not work for me, so far. Also, a simple iPhone keyboard does not come with the Ctrl and Alt keys that Paredit requires.)
-
-Honestly though: Parinfer has a simple API, so this should not be rocket science. CodeMirror 6 though seems/seemed rather complex compared to the CodeMirror 5 API...
-
-## Experience so far
+## Some experiences and observations
 
  * Looked at Shaun Lebron's original [parinfer-codemirror.js](https://github.com/shaunlebron/parinfer-codemirror) code and will study it more, as well as other Parinfer integrations, but decided that CodeMirror 6 is different enough that a fresh start makes sense.
  * Interesting that [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) is the hook needed to 'add' synchronous Parinfer modifications to a user triggered state transaction. (I overlooked it at first, because filtering means something else in the contexts that I am used to.)
