@@ -10,16 +10,21 @@
     "codemirror6"
   ],
   "author": "Jurjan-Paul Medema",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jurjanpaul/codemirror6-parinfer.git"
+  },
   "publishConfig": {
-   "access": "public"
+    "access": "public"
   },
   "files": [
     "dist/*"
   ],
   "exports": {
-   "import": "./dist/cm6-parinfer.js"
+    "import": "./dist/cm6-parinfer.js"
   },
   "module": "dist/cm6-parinfer.js",
+  "types": "dist/cm6-parinfer.d.ts",
   "dependencies": {
     "@codemirror/commands": "6.7.1",
     "@codemirror/lint": "6.8.4",
@@ -32,15 +37,21 @@
     "parinfer": "3.13.1"
   },
   "devDependencies": {
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.10.2",
     "eslint": "^9.17.0",
     "nodemon": "^3.1.9",
     "prettier": "^3.4.2",
+    "rollup": "^4.30.1",
+    "rollup-plugin-dts": "^6.1.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3"
   },
   "scripts": {
-    "build": "tsc",
+    "_build": "tsc",
+    "build": "rollup -c",
     "prepublishOnly": "npm run build",
     "lint": "eslint ts/**/*.{js,ts}",
     "format": "prettier --write \"ts/**/*.ts\""
