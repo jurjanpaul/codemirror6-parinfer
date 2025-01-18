@@ -2,13 +2,13 @@
 
 <span><a href="https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer" title="NPM version badge"><img src="https://img.shields.io/npm/v/@jurjanpaul/codemirror6-parinfer?color=blue" alt="NPM version badge" /></a></span>
 
-A [CodeMirror 6](https://codemirror.net/) extension that integrates [Parinfer](https://shaunlebron.github.io/parinfer/), providing automatic structural editing of Lisp code based on indentation, specifically for Clojure.
+A [CodeMirror 6](https://codemirror.net/) extension that integrates [Parinfer](https://shaunlebron.github.io/parinfer/), which facilitates structural editing of Lisp code (Clojure code in particular) by indentation.
 
 By default [`smartMode`](https://github.com/parinfer/parinfer.js/tree/master#status-update-2019-smart-mode) is applied, but both `indentMode` and `parenMode` can be selected as well. (For now the extension does not support styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail).)
 
 initially I used ClojureScript on [Scittle](https://babashka.org/scittle/) to explore what was needed to get the integration to work, but the actual extension is written in TypeScript and available from [npmjs.com](https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer).
 
-Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/), which also uses [Nextjournal's Clojure syntax support for CodeMirror 6](https://github.com/nextjournal/lang-clojure).
+Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/)!
 
 Please let me know if you have a use for this or have any feedback!
 
@@ -33,7 +33,7 @@ new EditorView({
 ```
 
 ## Motivation
-I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make available a Parinfer extension for it. For quite a while I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
+I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make available a Parinfer extension for it. For quite a while, as a Clojure programmer I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
 
 
 ## Some experiences and observations
