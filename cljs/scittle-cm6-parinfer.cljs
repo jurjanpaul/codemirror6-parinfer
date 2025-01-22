@@ -125,11 +125,11 @@
      "paren" (.parenMode js/parinfer text opts)))
 
 (defn- get-config
-  [config-field state k default]
+  [state k default]
   (get (.field state config-field false) k default))
 
 (defn- apply-parinfer-smart-with-diff
-  [config-field transaction]
+  [transaction]
   (let [start-state (.-startState transaction)
         old-cursor (-> start-state .-selection .-main .-head)
         old-doc (.-doc start-state)
@@ -145,7 +145,7 @@
         (when-not (.-empty new-selection)
            (-> (cm-pos->parinfer-yx new-doc (.-from new-selection))
                first))
-        result (parinfer (get-config config-field start-state :mode "smart")
+        result (parinfer (get-config start-state :mode "smart")
                          new-text
                          #js{:prevCursorX old-x
                              :prevCursorLine old-y
@@ -168,29 +168,30 @@
          :effects (maybe-error-effect start-state nil)}))))
 
 (defn- enabled?
-  [config-field state]
-  (get-config config-field state :enabled? true))
+  [state]
+  (get-config state :enabled? true))
 
 (defn- parinfer-transaction-filter
-  [init-config]
+  [initial-config]
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
          (let [a-set-config-effect
                (->> (filter-transaction-effects set-config-effect transaction) last)]
-           (if (or (and (enabled? config-field (.-startState transaction))
+           (if (or (and (enabled? (.-startState transaction))
                         (.-docChanged transaction))
                    (and a-set-config-effect (:enabled? (.-value a-set-config-effect))))
              (let [{:keys [effects changes] :as parinfer-changes}
-                   (apply-parinfer-smart-with-diff config-field transaction)]
+                   (apply-parinfer-smart-with-diff transaction)]
                (if (or effects (seq (js->clj changes)))
                  #js[transaction
                      (clj->js parinfer-changes)]
                  transaction))
-             (if (not (get-config config-field (.-state transaction) :initialized? false))
+             (if (not (get-config (.-state transaction) :initialized? false))
                (do
-                 (println "initializing parinfer" init-config)
+                 (println "initializing parinfer" initial-config)
                  #js[transaction
-                     #js{:effects (.of set-config-effect (assoc init-config :initialized? true))}])
+                     #js{:effects (.of set-config-effect
+                                       (assoc initial-config :initialized? true))}])
                transaction))))))
 
 (defn- error->diagnostics
@@ -226,7 +227,7 @@
                      last-set-config-effect)
              (let [state (.-state update)
                    error (:current (.field state parinfer-error-field))
-                   parinfer-diagnostics (if (and (enabled? config-field state) error)
+                   parinfer-diagnostics (if (and (enabled? state) error)
                                           (error->diagnostics (.-doc state)
                                                               (js->clj error))
                                           #js[])
@@ -237,6 +238,7 @@
                (.dispatch (.-view update) diagnostic-tr)))))))
 
 ;; exports
+;; - config-field
 ;; - set-config-effect
 
 (defn configure-parinfer
@@ -258,9 +260,9 @@
 (defn parinfer-extension
  ([]
   (parinfer-extension {}))
- ([init-config]
+ ([initial-config]
   #js[config-field
       parinfer-error-field
       invert-parinfer-error
-      (parinfer-transaction-filter init-config)
+      (parinfer-transaction-filter initial-config)
       (parinfer-view-update-listener)]))
