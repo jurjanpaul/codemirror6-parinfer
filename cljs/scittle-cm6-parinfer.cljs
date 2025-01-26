@@ -18,17 +18,20 @@
 (def set-config-effect
   (.define js/cm_state.StateEffect))
 
+(def ^:private default-config
+  {:enabled? true
+   :mode "smart"})
+
 (def ^:private config-field
   (.define js/cm_state.StateField
            #js{"create"
                (fn []
-                 {:enabled? true
-                  :mode "smart"})
+                 nil)
                "update"
                (fn [value, tr]
                  (if-let [a-set-config-effect
                           (->> (filter-transaction-effects set-config-effect tr) last)]
-                  (merge value (debug "new config" (.-value a-set-config-effect)))
+                  (merge value (.-value a-set-config-effect))
                   value))}))
 
 (def ^:private parinfer-error-effect
@@ -171,6 +174,13 @@
   [state]
   (get-config state :enabled? true))
 
+(defn- maybe-initialize
+  [transaction initial-config]
+  (if (not (.field (.-startState transaction) config-field false)) ; afraid of infinite loop, but try with startState anyway!
+    #js[transaction
+        #js{:effects (.of set-config-effect (merge default-config initial-config))}]
+    transaction))
+
 (defn- parinfer-transaction-filter
   [initial-config]
   (.of (.-transactionFilter js/cm_state.EditorState)
@@ -186,13 +196,7 @@
                  #js[transaction
                      (clj->js parinfer-changes)]
                  transaction))
-             (if (not (get-config (.-state transaction) :initialized? false))
-               (do
-                 (println "initializing parinfer" initial-config)
-                 #js[transaction
-                     #js{:effects (.of set-config-effect
-                                       (assoc initial-config :initialized? true))}])
-               transaction))))))
+             (maybe-initialize transaction initial-config))))))
 
 (defn- error->diagnostics
   [doc {:strs [x lineNo extra message] :as _error}]
