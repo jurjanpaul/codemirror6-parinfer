@@ -5,6 +5,11 @@ import dts from 'rollup-plugin-dts';
 export default [
   {
     input: 'ts/cm6-parinfer.ts',
+    external: ['@codemirror/state',
+               '@codemirror/view',
+               '@codemirror/lint',
+               '@codemirror/commands',
+               '@codemirror/merge'],
     output: [
       {
         file: 'dist/cm6-parinfer.js',

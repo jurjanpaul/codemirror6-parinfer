@@ -34,6 +34,14 @@
                   (merge value (.-value a-set-config-effect))
                   value))}))
 
+(defn- get-config
+  [state k default]
+  (get (.field state config-field false) k default))
+
+(defn- enabled?
+  [state]
+  (get-config state :enabled? true))
+
 (def ^:private parinfer-error-effect
   (.define js/cm_state.StateEffect))
 
@@ -127,10 +135,6 @@
      "indent" (.indentMode js/parinfer text opts)
      "paren" (.parenMode js/parinfer text opts)))
 
-(defn- get-config
-  [state k default]
-  (get (.field state config-field false) k default))
-
 (defn- apply-parinfer-smart-with-diff
   [transaction]
   (let [start-state (.-startState transaction)
@@ -169,10 +173,6 @@
          :selection (.cursor js/cm_state.EditorSelection new-pos)
          :sequential true
          :effects (maybe-error-effect start-state nil)}))))
-
-(defn- enabled?
-  [state]
-  (get-config state :enabled? true))
 
 (defn- maybe-initialize
   [transaction initial-config]

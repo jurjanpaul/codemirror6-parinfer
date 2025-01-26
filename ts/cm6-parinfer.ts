@@ -22,9 +22,10 @@ const getParinfer = async (): Promise<Parinfer> => {
 }
 const parinfer_lib = await getParinfer()
 
-import type { ChangeSpec, Text, Transaction, TransactionSpec } from "@codemirror/state"
-import { ChangeSet, EditorSelection, EditorState, StateEffect, StateEffectType, StateField } from "@codemirror/state"
-import { EditorView, ViewUpdate } from "@codemirror/view"
+import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
+import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
+import type { ViewUpdate } from "@codemirror/view"
+import { EditorView } from "@codemirror/view"
 import type { Diagnostic } from "@codemirror/lint"
 import { setDiagnostics, forEachDiagnostic } from "@codemirror/lint"
 import { invertedEffects } from "@codemirror/commands"
@@ -35,35 +36,37 @@ function filterTransactionEffects<T> (effectType: StateEffectType<T>, transactio
 }
 
 /**
- * Effect to set the enabled state.
- */
-export const setEnabledEffect = StateEffect.define<boolean>()
-
-const enabledField = StateField.define<boolean>({
- create: () => true,
- update: (value, tr) => {
-   const effect = filterTransactionEffects(setEnabledEffect, tr).at(-1)
-   return effect ? effect.value : value
- }
-})
-
-/**
  * Type representing a Parinfer mode.
  */
 export type ParinferMode = "smart" | "indent" | "paren"
 
-/**
- * Effect to switch the Parinfer mode.
- */
-export const switchModeEffect = StateEffect.define<ParinferMode>()
+export type ParinferExtensionConfig = {
+  enabled?: boolean
+  mode?: ParinferMode
+}
 
-const modeField = StateField.define<ParinferMode>({
-  create: () => "smart",
+export const setConfigEffect = StateEffect.define<ParinferExtensionConfig>()
+
+const defaultConfig: ParinferExtensionConfig = {
+  enabled: true,
+  mode: "smart"
+}
+
+const configField = StateField.define<ParinferExtensionConfig | null>({
+  create: () => null,
   update: (value, tr) => {
-    const effect = filterTransactionEffects(switchModeEffect, tr).at(-1)
-    return effect ? effect.value : value
+    const effect = filterTransactionEffects(setConfigEffect, tr).at(-1)
+    return effect ? { ...value, ...effect.value } : value
   }
 })
+
+function enabled(state: EditorState): boolean {
+  return { ...defaultConfig, ...state.field(configField, false) }.enabled!
+}
+
+function mode(state: EditorState): ParinferMode {
+  return { ...defaultConfig, ...state.field(configField, false) }.mode!
+}
 
 let effectIdCounter = 0
 
@@ -118,7 +121,7 @@ function parinferYxToCmPos(doc: Text, y: number, x: number): number {
   return doc.line(y + 1).from + x
 }
 
-function cmChangesetToParinferChanges(oldDoc: Text, cmChanges: ChangeSet): ParinferChange[] {
+function cmChangeSetToParinferChanges(oldDoc: Text, cmChanges: ChangeSet): ParinferChange[] {
   const parinferChanges: ParinferChange[] = []
   cmChanges.iterChanges((fromA: number, toA: number, _fromB: number, _toB: number, inserted: Text) => {
     const [fromAy, fromAx] = cmPosToParinferYx(oldDoc, fromA)
@@ -179,10 +182,10 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
   const newSelection = transaction.newSelection.main
   const newCursor = newSelection.head
   const [newY, newX] = cmPosToParinferYx(newDoc, newCursor)
-  const parinferChanges = cmChangesetToParinferChanges(oldDoc, transaction.changes)
+  const parinferChanges = cmChangeSetToParinferChanges(oldDoc, transaction.changes)
   const selectionStartLine =
     !newSelection.empty ? cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined
-  const result = parinfer(startState.field(modeField, false) || "smart",
+  const result = parinfer(mode(startState),
                           newText, {
                             prevCursorX: oldX,
                             prevCursorLine: oldY,
@@ -207,11 +210,21 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
   }
 }
 
-function parinferTransactionFilter() {
+function maybeInitialize(transaction: Transaction, initialConfig: ParinferExtensionConfig): TransactionSpec | readonly TransactionSpec[] {
+  if (!(transaction.startState.field(configField, false))) {
+    return [
+      transaction,
+      {effects: setConfigEffect.of({ ...defaultConfig, ...initialConfig})}
+    ]
+  }
+  return transaction
+}
+
+function parinferTransactionFilter(initialConfig?: ParinferExtensionConfig) {
   return EditorState.transactionFilter.of(tr => {
-    const aSetEnabledEffect = filterTransactionEffects(setEnabledEffect, tr).at(-1)
-    if ((tr.startState.field(enabledField, false) && tr.docChanged) ||
-        (aSetEnabledEffect && aSetEnabledEffect.value)) {
+    const aSetConfigEffect = filterTransactionEffects(setConfigEffect, tr).at(-1)
+    if ((enabled(tr.startState) && tr.docChanged) ||
+        (aSetConfigEffect && aSetConfigEffect.value.enabled)) {
       const parinferChanges = applyParinferSmartWithDiff(tr)
       if (parinferChanges) {
         if (parinferChanges.effects || parinferChanges.changes) {
@@ -253,12 +266,11 @@ function hasEffectOfType(effectType: StateEffectType<any>, update: ViewUpdate): 
 
 function parinferViewUpdateListener() {
   return EditorView.updateListener.of(update => {
-    if (hasEffectOfType(setEnabledEffect, update) || update.docChanged) {
+    if (hasEffectOfType(setConfigEffect, update) || update.docChanged) {
       const state = update.state
-      const enabled = state.field(enabledField, false)
       const parinferError = state.field(parinferErrorField)
       const parinferDiagnostics: Diagnostic[] =
-        (enabled && parinferError.current) ? errorToDiagnostics(state.doc, parinferError.current)
+        (enabled(state) && parinferError.current) ? errorToDiagnostics(state.doc, parinferError.current)
                                            : []
       const diagnosticTr = setDiagnostics(state,
                                           [...parinferDiagnostics,
@@ -268,13 +280,17 @@ function parinferViewUpdateListener() {
   })
 }
 
+export function configureParinfer(view: EditorView, config: ParinferExtensionConfig): void {
+   view.dispatch({effects: setConfigEffect.of(config)})
+}
+
 /**
  * Switches the Parinfer mode for the provided editor view.
  * @param view the editor view
  * @param mode the Parinfer mode to switch to
  */
 export function switchMode(view: EditorView, mode: ParinferMode): void {
-  view.dispatch({effects: switchModeEffect.of(mode)})
+  configureParinfer(view, {mode: mode})
 }
 
 /**
@@ -282,7 +298,7 @@ export function switchMode(view: EditorView, mode: ParinferMode): void {
  * @param view the editor view
  */
 export function disableParinfer(view: EditorView): void {
-  view.dispatch({effects: setEnabledEffect.of(false)})
+  configureParinfer(view, {enabled: false})
 }
 
 /**
@@ -290,19 +306,18 @@ export function disableParinfer(view: EditorView): void {
  * @param view the editor view
  */
 export function enableParinfer(view: EditorView): void {
-  view.dispatch({effects: setEnabledEffect.of(true)})
+  configureParinfer(view, {enabled: true})
 }
 
 /**
  * @returns the CodeMirror6 Parinfer extension in the form of an array of extensions
  */
-export function parinferExtension() {
+export function parinferExtension(initialConfig?: ParinferExtensionConfig): Extension {
   return [
-    enabledField,
-    modeField,
+    configField,
     parinferErrorField,
     invertParinferError,
-    parinferTransactionFilter(),
+    parinferTransactionFilter(initialConfig),
     parinferViewUpdateListener()
   ]
 }
