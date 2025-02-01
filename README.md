@@ -1,4 +1,4 @@
-# Parinfer in CodeMirror 6
+# CodeMirror 6 Parinfer extension
 
 <span><a href="https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer" title="NPM version badge"><img src="https://img.shields.io/npm/v/@jurjanpaul/codemirror6-parinfer?color=blue" alt="NPM version badge" /></a></span>
 
@@ -33,17 +33,10 @@ new EditorView({
 ```
 
 ## Motivation
-I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available. 
+I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available.
 
 For quite a while, as a Clojure programmer I was simply too intimidated by the statically typed CodeMirror 6 module architecture to even consider taking on that task myself next to a few other side projects. But still not finding one some years after the CodeMirror 6 release, I finally found the time and motivation to take up the challenge, starting with studying TypeScript, etc.
 
+## Implementation
+Some observations w.r.t. the implementation can be found [here](docs/implementation.md).
 
-## Some experiences and observations
-
- * Looked at Shaun Lebron's original [parinfer-codemirror.js](https://github.com/shaunlebron/parinfer-codemirror) code and will study it more, as well as other Parinfer integrations, but decided that CodeMirror 6 is different enough that a fresh start makes sense.
- * Interesting that [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) is the hook needed to 'add' synchronous Parinfer modifications to a user triggered state transaction. (I overlooked it at first, because filtering means something else in the contexts that I am used to.)
- * The documentation for [`transactionFilter`](https://codemirror.net/docs/ref/#state.EditorState^transactionFilter) clearly states that it is recommended to avoid accessing `Transaction.state` in a filter, but it seems unavoidable when creating a new transaction for the Parinfer changes and to apply diagnostics in case of error.
- * I had learned from [this CodeMirror discussion thread](https://discuss.codemirror.net/t/implement-parinfer-with-snippets/3549/2) that it would probably be a good idea to diff the Parinfer output with its input, if only to keep the edit history's memory usage down. I started using the [diff-match-patch](https://github.com/google/diff-match-patch) library for this, but later found CodeMirror's own [diff function](https://github.com/codemirror/merge?tab=readme-ov-file#user-content-diff) which I am now using (needs less work converting diffs and keeps the number of external dependencies down).
- * Marking Parinfer errors in such a way that they can be undone and redone proved trickier than I had expected. I got it to work with a StateField, StateEffect and invertedEffects, but perhaps I am still missing something simple and obvious.
- * All in all, a lot of expensive transformations need to happen for each key press... Even so, the result feels fast enough, even with a large code base on a phone.
- * I wonder if the same result may after all be achieved with less expensive steps, but I'll take (relatively) 'slow' over asynchronous postprocessing any day, having experienced how poorly that works out when an editor provides no alternative.

@@ -3,12 +3,6 @@
 
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
 
-declare global {
-  interface Window {
-    parinfer?: Parinfer
-  }
-}
-
 const getParinfer = async (): Promise<Parinfer> => {
   if (window.parinfer) {
     return window.parinfer

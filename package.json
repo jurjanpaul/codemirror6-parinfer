@@ -1,6 +1,6 @@
 {
   "name": "@jurjanpaul/codemirror6-parinfer",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Parinfer integration for CodeMirror 6",
   "license": "MIT",
   "type": "module",
@@ -47,9 +47,11 @@
     "rollup-plugin-dts": "^6.1.1",
     "ts-node": "^10.9.2",
     "tslib": "^2.8.1",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "rimraf": "^6.0.1"
   },
   "scripts": {
+    "clean": "rimraf dist",
     "_build": "tsc",
     "build": "rollup -c",
     "prepublishOnly": "npm run build",

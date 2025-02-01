@@ -11,7 +11,8 @@
     "sourceMap": true,
     "declarationMap": true,
     "allowArbitraryExtensions": true,
-    "typeRoots": ["./node_modules/@types", "./ts/parinfer.d.ts"]
+    "typeRoots": ["./node_modules/@types", "./ts/parinfer.d.ts"],
   },
-  "include": ["./ts/**/*.ts"]
+  "include": ["./ts/**/*.ts"],
+  "exclude": ["declarations.d.ts", "ts/tsdemo/**/*"]
 }
