@@ -14,5 +14,5 @@
     "typeRoots": ["./node_modules/@types", "./ts/parinfer.d.ts"],
   },
   "include": ["./ts/**/*.ts"],
-  "exclude": ["declarations.d.ts", "ts/tsdemo/**/*"]
+  "exclude": ["declarations.d.ts", "**/ts-demo/**/*"]
 }
