@@ -3,18 +3,13 @@
 
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
 
-const getParinfer = async (): Promise<Parinfer> => {
-  if (window.parinfer) {
-    return window.parinfer
-  }
-  try {
-    const module = await import('parinfer')
-    return (module.default || module) as Parinfer
-  } catch (error) {
-    throw new Error('Failed to load parinfer library: ' + error)
-  }
+var parinfer_lib: Parinfer
+if (window.parinfer) {
+  parinfer_lib = window.parinfer
 }
-const parinfer_lib = await getParinfer()
+else {
+  parinfer_lib = require('parinfer')
+}
 
 import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
