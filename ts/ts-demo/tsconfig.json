@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "moduleResolution": "node",
+    "target": "es2017",
+    "module": "ES2020",
+    "esModuleInterop": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "allowArbitraryExtensions": true,
+  },
+  "include": ["./*.ts"]
+}
