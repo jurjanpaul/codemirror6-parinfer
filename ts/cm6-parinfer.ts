@@ -1,16 +1,8 @@
 // Does not (yet) support:
 // - styling parentrails
 
+const parinfer_lib = window.parinfer || require('parinfer')
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
-
-var parinfer_lib: Parinfer
-if (window.parinfer) {
-  parinfer_lib = window.parinfer
-}
-else {
-  parinfer_lib = require('parinfer')
-}
-
 import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
 import type { ViewUpdate } from "@codemirror/view"
