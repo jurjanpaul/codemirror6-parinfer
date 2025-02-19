@@ -261,6 +261,11 @@ function parinferViewUpdateListener() {
   })
 }
 
+/**
+ * Updates the editor's extension configuration.
+ * @param view the editor view
+ * @param config new configuration for the Parinfer extension
+ */
 export function configureParinfer(view: EditorView, config: ParinferExtensionConfig): void {
    view.dispatch({effects: setConfigEffect.of(config)})
 }
@@ -291,6 +296,8 @@ export function enableParinfer(view: EditorView): void {
 }
 
 /**
+ * Initialises the Parinfer extension for CodeMirror6.
+ * @param initialConfig (optional) the initial configuration for the Parinfer extension
  * @returns the CodeMirror6 Parinfer extension in the form of an array of extensions
  */
 export function parinferExtension(initialConfig?: ParinferExtensionConfig): Extension {
