@@ -32,6 +32,50 @@ new EditorView({
 });
 ```
 
+## API
+
+### `@jurjanpaul/cm6-parinfer` TypeScript module
+```typescript
+parinferExtension(initialConfig?: ParinferExtensionConfig): Extension
+```
+<p style="margin-left: 2em; margin-bottom: 1.25em;">
+  Main entry point: initialises the extension with optional configuration.<br>
+  By default Parinfer is enabled in <code>"smart"</code> mode.
+</p>
+
+
+```typescript
+type ParinferExtensionConfig = {
+  enabled?: boolean
+  mode?: ParinferMode
+}
+```
+
+```typescript
+type ParinferMode = "smart" | "indent" | "paren"
+```
+
+```typescript
+configureParinfer(view: EditorView, config: ParinferExtensionConfig)
+```
+<p style="margin-left: 2em; margin-bottom: 1.25em;">Updates the editor's extension configuration.</p>
+
+```typescript
+switchMode(view: EditorView, mode: ParinferMode)
+```
+<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+
+```typescript
+disableParinfer(view: EditorView)
+```
+<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+
+```typescript
+enableParinfer(view: EditorView)
+```
+<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+
+
 ## Motivation
 I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available.
 
