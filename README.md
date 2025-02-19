@@ -38,10 +38,10 @@ new EditorView({
 ```typescript
 parinferExtension(initialConfig?: ParinferExtensionConfig): Extension
 ```
-<p style="margin-left: 2em; margin-bottom: 1.25em;">
-  Main entry point: initialises the extension with optional configuration.<br>
-  By default Parinfer is enabled in <code>"smart"</code> mode.
-</p>
+
+Main entry point: initialises the extension with optional configuration.<br>
+By default Parinfer is enabled in <code>"smart"</code> mode.<br><br>
+
 
 
 ```typescript
@@ -55,25 +55,27 @@ type ParinferExtensionConfig = {
 type ParinferMode = "smart" | "indent" | "paren"
 ```
 
+<br>
+
 ```typescript
 configureParinfer(view: EditorView, config: ParinferExtensionConfig)
 ```
-<p style="margin-left: 2em; margin-bottom: 1.25em;">Updates the editor's extension configuration.</p>
+Updates the editor's extension configuration.<br><br>
 
 ```typescript
 switchMode(view: EditorView, mode: ParinferMode)
 ```
-<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
 
 ```typescript
 disableParinfer(view: EditorView)
 ```
-<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
 
 ```typescript
 enableParinfer(view: EditorView)
 ```
-<p style="margin-left: 2em; margin-bottom: 1.25em;">convenience wrapper for <code>configureParinfer</code>.</p>
+Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
 
 
 ## Motivation
