@@ -34,7 +34,7 @@ new EditorView({
 
 ## API
 
-### `@jurjanpaul/cm6-parinfer` TypeScript module
+### `@jurjanpaul/codemirror6-parinfer` TypeScript module
 ```typescript
 parinferExtension(initialConfig?: ParinferExtensionConfig): Extension
 ```
