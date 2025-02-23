@@ -1,10 +1,9 @@
 // Does not (yet) support:
 // - styling parentrails
 
-import parinfer from 'parinfer';
-const parinfer_lib = parinfer as Parinfer;
-
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
+import parinfer from 'parinfer';
+const parinferLib = parinfer as Parinfer;
 import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
 import type { ViewUpdate } from "@codemirror/view"
@@ -139,11 +138,11 @@ function maybeErrorEffect(startState: EditorState, parinferError: ParinferError 
 function invokeParinfer(mode: ParinferMode, text: string, opts: ParinferOptions): ParinferResult {
   switch(mode) {
     case "smart":
-      return parinfer_lib.smartMode(text, opts)
+      return parinferLib.smartMode(text, opts)
     case "indent":
-      return parinfer_lib.indentMode(text, opts)
+      return parinferLib.indentMode(text, opts)
     case "paren":
-      return parinfer_lib.parenMode(text, opts)
+      return parinferLib.parenMode(text, opts)
   }
 }
 
