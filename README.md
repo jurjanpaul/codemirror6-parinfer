@@ -6,7 +6,7 @@ A [CodeMirror 6](https://codemirror.net/) extension that integrates [Parinfer](h
 
 By default [`smartMode`](https://github.com/parinfer/parinfer.js/tree/master#status-update-2019-smart-mode) is applied, but both `indentMode` and `parenMode` can be selected as well. (For now the extension does not support styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail).)
 
-Initially I used ClojureScript on [Scittle](https://babashka.org/scittle/) to explore what was needed to get the integration to work, but the actual extension is written in TypeScript and available from [npmjs.com](https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer).
+Initially I used ClojureScript on [Scittle](https://babashka.org/scittle/) to explore what was needed to get the integration to work, but the actual extension is written in TypeScript and available as ES module (with the `parinfer.js` dependency inlined for more convenient downstream bundling) from [npmjs.com](https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer).
 
 Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/)!
 

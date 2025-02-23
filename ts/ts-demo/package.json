@@ -12,19 +12,16 @@
     "@codemirror/merge": "6.7.4",
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.36.1",
-    "@jurjanpaul/codemirror6-parinfer": "^0.0.8",
+    "@jurjanpaul/codemirror6-parinfer": "^0.0.9",
     "@nextjournal/lang-clojure": "1.0.0",
     "codemirror": "6.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/node": "^22.10.2",
-    "eslint": "^9.17.0",
     "nodemon": "^3.1.9",
-    "prettier": "^3.4.2",
     "rimraf": "^6.0.1",
     "rollup": "^4.34.6",
     "ts-node": "^10.9.2",
@@ -35,8 +32,6 @@
     "clean": "rimraf dist",
     "_build": "tsc",
     "build": "rimraf dist && node_modules/.bin/rollup --config rollup.config.js --configPlugin @rollup/plugin-typescript",
-    "prepublishOnly": "npm run build",
-    "lint": "eslint ts/**/*.{js,ts}",
-    "format": "prettier --write \"*.ts\""
+    "prepublishOnly": "npm run build"
   }
 }
