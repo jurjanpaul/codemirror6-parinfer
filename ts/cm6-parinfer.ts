@@ -2,8 +2,8 @@
 // - styling parentrails
 
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
-import parinfer from 'parinfer';
-const parinferLib = parinfer as Parinfer;
+import parinfer from "parinfer"
+const parinferLib = parinfer as Parinfer
 import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
 import type { ViewUpdate } from "@codemirror/view"
