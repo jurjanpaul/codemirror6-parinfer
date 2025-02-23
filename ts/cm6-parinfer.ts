@@ -35,7 +35,7 @@ const defaultConfig: ParinferExtensionConfig = {
   mode: "smart"
 }
 
-const configField = StateField.define<ParinferExtensionConfig | null>({
+export const configField = StateField.define<ParinferExtensionConfig | null>({
   create: () => null,
   update: (value, tr) => {
     const effect = filterTransactionEffects(setConfigEffect, tr).at(-1)

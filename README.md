@@ -38,10 +38,8 @@ new EditorView({
 ```typescript
 parinferExtension(initialConfig?: ParinferExtensionConfig): Extension
 ```
-
 Main entry point: initialises the extension with optional configuration.<br>
 By default Parinfer is enabled in <code>"smart"</code> mode.<br><br>
-
 
 
 ```typescript
@@ -55,27 +53,39 @@ type ParinferExtensionConfig = {
 type ParinferMode = "smart" | "indent" | "paren"
 ```
 
+```typescript
+configField: StateField<ParinferExtensionConfig>
+```
+CodeMirror state field with the current extension configuration.
+
+<br>
+
+```typescript
+setConfigEffect: StateEffectType<ParinferExtensionConfig>
+```
+CodeMirror state effect that can be used in a transaction to update the extension's configuration.
+
 <br>
 
 ```typescript
 configureParinfer(view: EditorView, config: ParinferExtensionConfig)
 ```
-Updates the editor's extension configuration.<br><br>
+Convenience wrapper around the `setConfigEffect` state effect.<br><br>
 
 ```typescript
 switchMode(view: EditorView, mode: ParinferMode)
 ```
-Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
+Speaks for itself. Convenience wrapper for `configureParinfer`.<br><br>
 
 ```typescript
 disableParinfer(view: EditorView)
 ```
-Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
+Speaks for itself. Convenience wrapper for `configureParinfer`.<br><br>
 
 ```typescript
 enableParinfer(view: EditorView)
 ```
-Speaks for itself. Convenience wrapper for <code>configureParinfer</code>.<br><br>
+Speaks for itself. Convenience wrapper for `configureParinfer`.<br><br>
 
 
 ## Motivation
