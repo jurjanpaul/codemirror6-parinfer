@@ -1,7 +1,7 @@
 {
   "name": "@jurjanpaul/codemirror6-parinfer",
-  "version": "0.0.8",
-  "description": "Parinfer integration for CodeMirror 6",
+  "version": "0.0.9",
+  "description": "Parinfer extension for CodeMirror 6",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -28,7 +28,6 @@
     "@codemirror/merge": "6.7.4",
     "@codemirror/state": "6.5.0",
     "@codemirror/view": "6.36.1",
-    "@jurjanpaul/codemirror6-parinfer": "^0.0.8",
     "@nextjournal/lang-clojure": "1.0.0",
     "codemirror": "6.0.1",
     "parinfer": "3.13.1"
