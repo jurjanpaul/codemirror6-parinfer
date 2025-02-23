@@ -1,7 +1,9 @@
 // Does not (yet) support:
 // - styling parentrails
 
-const parinfer_lib = window.parinfer || require('parinfer')
+import parinfer from 'parinfer';
+const parinfer_lib = parinfer as Parinfer;
+
 import type { Parinfer, ParinferChange, ParinferOptions, ParinferResult, ParinferError } from "parinfer"
 import type { ChangeSet, ChangeSpec, Extension, StateEffectType, Text, Transaction, TransactionSpec } from "@codemirror/state"
 import { EditorSelection, EditorState, StateEffect, StateField } from "@codemirror/state"
@@ -142,7 +144,7 @@ function maybeErrorEffect(startState: EditorState, parinferError: ParinferError 
   return null
 }
 
-function parinfer(mode: ParinferMode, text: string, opts: ParinferOptions): ParinferResult {
+function invokeParinfer(mode: ParinferMode, text: string, opts: ParinferOptions): ParinferResult {
   switch(mode) {
     case "smart":
       return parinfer_lib.smartMode(text, opts)
@@ -166,15 +168,15 @@ function applyParinferSmartWithDiff(transaction: Transaction): TransactionSpec |
   const parinferChanges = cmChangeSetToParinferChanges(oldDoc, transaction.changes)
   const selectionStartLine =
     !newSelection.empty ? cmPosToParinferYx(newDoc, newSelection.from)[0] : undefined
-  const result = parinfer(mode(startState),
-                          newText, {
-                            prevCursorX: oldX,
-                            prevCursorLine: oldY,
-                            cursorX: newX,
-                            cursorLine: newY,
-                            changes: parinferChanges,
-                            selectionStartLine
-                          })
+  const result = invokeParinfer(mode(startState),
+                                newText, {
+                                  prevCursorX: oldX,
+                                  prevCursorLine: oldY,
+                                  cursorX: newX,
+                                  cursorLine: newY,
+                                  changes: parinferChanges,
+                                  selectionStartLine
+                                })
   if (!result.success) {
     const effect = maybeErrorEffect(startState, result.error!)
     return effect ? { effects: [effect] } : null

@@ -1,11 +1,15 @@
-import typescript from '@rollup/plugin-typescript';
-import terser from '@rollup/plugin-terser';
+import commonjs from "@rollup/plugin-commonjs"
+import {nodeResolve} from "@rollup/plugin-node-resolve"
 import dts from 'rollup-plugin-dts';
+import terser from '@rollup/plugin-terser';
+import typescript from '@rollup/plugin-typescript';
+import { assert } from "console";
 
 export default [
   {
     input: 'ts/cm6-parinfer.ts',
-    external: ['@codemirror/state',
+    external: ['assert',
+               '@codemirror/state',
                '@codemirror/view',
                '@codemirror/lint',
                '@codemirror/commands',
@@ -21,9 +25,16 @@ export default [
         format: 'esm',
         plugins: [terser()],
         sourcemap: true,
-      },
+      }
     ],
-    plugins: [typescript()],
+    plugins: [
+      typescript(),
+      nodeResolve(),
+      commonjs({
+        ignore: ['assert'],
+        transformMixedEsModules: true, // inline Parinfer
+      })
+    ]
   },
   {
     input: 'dist/cm6-parinfer.d.ts',
@@ -32,5 +43,5 @@ export default [
       format: 'esm',
     },
     plugins: [dts()],
-  },
+  }
 ];

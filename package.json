@@ -20,9 +20,6 @@
   "files": [
     "dist/*"
   ],
-  "exports": {
-    "import": "./dist/cm6-parinfer.js"
-  },
   "module": "dist/cm6-parinfer.js",
   "types": "dist/cm6-parinfer.d.ts",
   "dependencies": {
@@ -37,6 +34,7 @@
     "parinfer": "3.13.1"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.2",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^12.1.2",
