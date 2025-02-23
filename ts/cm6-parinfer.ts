@@ -51,11 +51,7 @@ function mode(state: EditorState): ParinferMode {
   return { ...defaultConfig, ...state.field(configField, false) }.mode!
 }
 
-let effectIdCounter = 0
-
 interface InvertibleFieldValue<T> {
-  id: number // for debugging only
-  invertsId?: number // for debugging only
   previous: T | null
   current: T | null
 }
@@ -64,10 +60,8 @@ function invertInvertibleEffects(effectType: StateEffectType<InvertibleFieldValu
   const inverted: StateEffect<InvertibleFieldValue<any>>[] = []
   const effects = tr.effects.filter(e => e.is(effectType))
   effects.forEach(effect => {
-    const { id, previous, current } = effect.value
+    const { previous, current } = effect.value
     inverted.push(effectType.of({
-      id: ++effectIdCounter,
-      invertsId: id,
       previous: current,
       current: previous
     }))
@@ -79,7 +73,6 @@ const parinferErrorEffect = StateEffect.define<InvertibleFieldValue<ParinferErro
 
 const parinferErrorField = StateField.define<InvertibleFieldValue<ParinferError>>({
   create: () => ({
-    id: ++effectIdCounter,
     previous: null,
     current: null
   }),
@@ -136,7 +129,6 @@ function maybeErrorEffect(startState: EditorState, parinferError: ParinferError 
   const existing = startState.field(parinferErrorField, false)?.current
   if (JSON.stringify(existing) !== JSON.stringify(parinferError)) {
     return parinferErrorEffect.of({
-      id: ++effectIdCounter,
       previous: existing || null,
       current: parinferError
     })
