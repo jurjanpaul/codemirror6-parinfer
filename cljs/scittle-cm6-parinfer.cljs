@@ -1,15 +1,6 @@
 ;; Does not (yet) support:
 ;; - styling parentrails
 
-(def effect-id-counter (atom 0))
-
-(defn next-effect-id []
-  (swap! effect-id-counter inc))
-
-(defn debug [label v]
-  (println label (js->clj v))
-  v)
-
 (defn filter-transaction-effects
   [effect-type tr]
   (->> (.-effects tr)
@@ -49,9 +40,7 @@
   (.define js/cm_state.StateField
            #js{"create"
                (fn []
-                 {:id (next-effect-id)
-                  :previous nil
-                  :current nil})
+                 nil)
                "update"
                (fn [value, tr]
                  (if-let [a-parinfer-error-effect
@@ -64,15 +53,11 @@
        (fn [tr]
          (let [inverted #js[]
                parinfer-error-effects
-               (filter-transaction-effects parinfer-error-effect tr)]
-           (doseq [effect parinfer-error-effects
-                   :let [{:keys [id previous current]} (.-value effect)]]
+               (filter-transaction-effects parinfer-error-effect tr)
+               previous-error (.field (.-startState tr) parinfer-error-field false)]
+           (when (seq parinfer-error-effects)
              (.push inverted
-                    (.of parinfer-error-effect
-                         {:id (next-effect-id)
-                          :inverts-id id
-                          :previous current
-                          :current previous})))
+                    (.of parinfer-error-effect previous-error)))
            inverted))))
 
 (defn- cm-pos->parinfer-yx
@@ -120,13 +105,10 @@
 (defn- maybe-error-effect
   [start-state parinfer-error]
   (let [existing-parinfer-error
-        (:current (.field start-state parinfer-error-field false))]
+        (.field start-state parinfer-error-field false)]
     (when-not (= (js->clj existing-parinfer-error)
                  (js->clj parinfer-error))
-      (.of parinfer-error-effect
-           {:id (next-effect-id)
-            :previous existing-parinfer-error
-            :current parinfer-error}))))
+      (.of parinfer-error-effect parinfer-error))))
 
 (defn parinfer
    [mode text opts]
@@ -230,7 +212,7 @@
            (when (or (.-docChanged update)
                      last-set-config-effect)
              (let [state (.-state update)
-                   error (:current (.field state parinfer-error-field))
+                   error (.field state parinfer-error-field false)
                    parinfer-diagnostics (if (and (enabled? state) error)
                                           (error->diagnostics (.-doc state)
                                                               (js->clj error))
