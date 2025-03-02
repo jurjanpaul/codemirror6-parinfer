@@ -50,31 +50,10 @@ function mode(state: EditorState): ParinferMode {
   return { ...defaultConfig, ...state.field(configField, false) }.mode!
 }
 
-interface InvertibleFieldValue<T> {
-  previous: T | null
-  current: T | null
-}
+const parinferErrorEffect = StateEffect.define<ParinferError | null>()
 
-function invertInvertibleEffects(effectType: StateEffectType<InvertibleFieldValue<any>>, tr: Transaction):  StateEffect<InvertibleFieldValue<any>>[] {
-  const inverted: StateEffect<InvertibleFieldValue<any>>[] = []
-  const effects = tr.effects.filter(e => e.is(effectType))
-  effects.forEach(effect => {
-    const { previous, current } = effect.value
-    inverted.push(effectType.of({
-      previous: current,
-      current: previous
-    }))
-  })
-  return inverted
-}
-
-const parinferErrorEffect = StateEffect.define<InvertibleFieldValue<ParinferError>>()
-
-const parinferErrorField = StateField.define<InvertibleFieldValue<ParinferError>>({
-  create: () => ({
-    previous: null,
-    current: null
-  }),
+const parinferErrorField = StateField.define<ParinferError | null>({
+  create: () => null,
   update: (value, tr) => {
     const effect = tr.effects.filter(e => e.is(parinferErrorEffect)).at(-1)
     return effect ? effect.value : value
@@ -82,7 +61,12 @@ const parinferErrorField = StateField.define<InvertibleFieldValue<ParinferError>
 })
 
 const invertParinferError = invertedEffects.of((tr) => {
-  return invertInvertibleEffects(parinferErrorEffect, tr)
+  const effects = tr.effects.filter(e => e.is(parinferErrorEffect))
+  if (effects.length) {
+    const previous = tr.startState.field(parinferErrorField, false) || null
+    return [parinferErrorEffect.of(previous)]
+  }
+  return []
 })
 
 function cmPosToParinferYx(doc: Text, pos: number): [number, number] {
@@ -124,13 +108,10 @@ function parinferResultToCmChanges(result: ParinferResult, input: string): Chang
   })
 }
 
-function maybeErrorEffect(startState: EditorState, parinferError: ParinferError | null): StateEffect<InvertibleFieldValue<ParinferError>> | null {
-  const existing = startState.field(parinferErrorField, false)?.current
+function maybeErrorEffect(startState: EditorState, parinferError: ParinferError | null): StateEffect<ParinferError | null> | null {
+  const existing = startState.field(parinferErrorField, false)
   if (JSON.stringify(existing) !== JSON.stringify(parinferError)) {
-    return parinferErrorEffect.of({
-      previous: existing || null,
-      current: parinferError
-    })
+    return parinferErrorEffect.of(parinferError)
   }
   return null
 }
@@ -242,9 +223,9 @@ function parinferViewUpdateListener() {
   return EditorView.updateListener.of(update => {
     if (hasEffectOfType(setConfigEffect, update) || update.docChanged) {
       const state = update.state
-      const parinferError = state.field(parinferErrorField)
+      const parinferError = state.field(parinferErrorField, false)
       const parinferDiagnostics: Diagnostic[] =
-        (enabled(state) && parinferError.current) ? errorToDiagnostics(state.doc, parinferError.current)
+        (enabled(state) && parinferError) ? errorToDiagnostics(state.doc, parinferError)
                                            : []
       const diagnosticTr = setDiagnostics(state,
                                           [...parinferDiagnostics,
