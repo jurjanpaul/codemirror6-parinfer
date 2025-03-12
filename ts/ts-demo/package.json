@@ -6,12 +6,12 @@
     "dist/*"
   ],
   "dependencies": {
-    "@codemirror/commands": "6.7.1",
-    "@codemirror/language": "6.10.6",
+    "@codemirror/commands": "6.8.0",
+    "@codemirror/language": "6.10.8",
     "@codemirror/lint": "6.8.4",
     "@codemirror/merge": "6.7.4",
-    "@codemirror/state": "6.5.0",
-    "@codemirror/view": "6.36.1",
+    "@codemirror/state": "6.5.2",
+    "@codemirror/view": "6.36.4",
     "@jurjanpaul/codemirror6-parinfer": "0.0.12",
     "@nextjournal/lang-clojure": "1.0.0",
     "codemirror": "6.0.1"
