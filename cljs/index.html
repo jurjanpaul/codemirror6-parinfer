@@ -30,6 +30,7 @@
           "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.7.1/dist/index.js",
           "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.10.8/dist/index.js",
           "@codemirror/lint": "https://cdn.jsdelivr.net/npm/@codemirror/lint@6.8.4/dist/index.js",
+          "@codemirror/clojure_legacy_mode": "https://cdn.jsdelivr.net/npm/@codemirror/legacy-modes@6.5.0/mode/clojure.js",
           "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.2",
           "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.5.2/dist/index.js",
           "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.36.4/dist/index.js",
@@ -47,7 +48,8 @@
       import * as cm_view from '@codemirror/view';
       import * as cm_state from '@codemirror/state';
       import * as cm_merge from '@codemirror/merge';
-      import * as lang_clojure from '@nextjournal/lang-clojure'
+      // import * as lang_clojure from '@nextjournal/lang-clojure'
+      import {clojure} from "@codemirror/clojure_legacy_mode"
       globalThis.codemirror = codemirror;
       globalThis.cm_commands = cm_commands;
       globalThis.cm_language = cm_language;
@@ -55,7 +57,7 @@
       globalThis.cm_state = cm_state;
       globalThis.cm_view = cm_view;
       globalThis.cm_merge = cm_merge;
-      globalThis.lang_clojure = lang_clojure;
+      globalThis.lang_clojure = clojure;
       scittle.core.eval_script_tags();
     </script>
     <script type="application/x-scittle" src="scittle-cm6-parinfer.cljs"></script>
