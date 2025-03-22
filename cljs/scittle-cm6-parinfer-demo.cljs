@@ -7,7 +7,8 @@
          #js {:doc doc
               :extensions #js[(.of js/cm_language.indentUnit " ")
                               js/codemirror.basicSetup
-                              (js/lang_clojure.clojure)
+                              (.define (.-StreamLanguage js/cm_language)
+                                       js/lang_clojure)
                               (parinfer-extension)]})]
     (js/cm_view.EditorView. #js{:state start-state
                                 :parent (.getElementById js/document "editor")})))
