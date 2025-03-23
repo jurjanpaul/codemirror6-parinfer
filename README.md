@@ -4,7 +4,7 @@
 
 A [CodeMirror 6](https://codemirror.net/) extension that integrates [Parinfer](https://shaunlebron.github.io/parinfer/), which facilitates structural editing of Lisp code (Clojure code in particular) by indentation.
 
-By default [`smartMode`](https://github.com/parinfer/parinfer.js/tree/master#status-update-2019-smart-mode) is applied, but both `indentMode` and `parenMode` can be selected as well. (For now the extension does not support styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail).)
+By default [`smartMode`](https://github.com/parinfer/parinfer.js/tree/master#status-update-2019-smart-mode) is applied, but both `indentMode` and `parenMode` can be selected as well.
 
 Initially I used ClojureScript on [Scittle](https://babashka.org/scittle/) to explore what was needed to get the integration to work, but the actual extension is written in TypeScript and available as ES module (with the `parinfer.js` dependency inlined for more convenient downstream bundling) from [npmjs.com](https://www.npmjs.com/package/@jurjanpaul/codemirror6-parinfer).
 
@@ -87,6 +87,10 @@ enableParinfer(view: EditorView)
 ```
 Speaks for itself. Convenience wrapper for `configureParinfer`.<br><br>
 
+## Out of scope (at least for the foreseeable future)
+ - visualising/styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail) that parinfer includes in its result;
+ - visualising the `tabStops` that parinfer includes in its result;
+ - smart indentation (does not really belong to Parinfer, but missed anyway, because outside the legacy Clojure mode there is no support for CodeMirror 6 yet).
 
 ## Motivation
 I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available.

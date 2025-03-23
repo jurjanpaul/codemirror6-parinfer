@@ -17,7 +17,10 @@
       <p>
         Note that Nextjournal's CodeMirror 6 Clojure mode follows <a href="https://tonsky.me/blog/clojurefmt/">Tonsky’s Better Clojure Formatting</a>
         instead of the smart indentation that you might be used to from the original <a href="https://shaunlebron.github.io/parinfer/demo">Parinfer demo editor<a/>.
-        Smart indentation, which is particularly noticeable when clicking Enter directly after a function invocation's argument, is supported by the <a href="https://github.com/codemirror/legacy-modes/blob/main/mode/clojure.js">CodeMirror 6 Clojure legacy mode</a> though, as demonstrated in the following editor, which was kindly contributed by <a href="https://github.com/adamrenklint">Adam Renklint</a>:</p>
+        Smart indentation, which is particularly noticeable when clicking Enter directly after a function invocation's argument, is not provided by Parinfer;
+        it was originally provided by CodeMirror 5's `smartIndent` option and the CodeMirror 5 Clojure mode.
+        When you want/need smart identation in CodeMirror 6, you can use the <a href="https://github.com/codemirror/legacy-modes/blob/main/mode/clojure.js">CodeMirror 6 Clojure legacy mode</a> that also supports it,
+        as demonstrated in the following editor, which was kindly conributed by <a href="https://github.com/adamrenklint">Adam Renklint</a>:</p>
       <p><iframe style="background-color: white;width:100%;min-height:fit-content;border:2px solid grey;" src="cljs/smart-indent-demo.html"></iframe></p>
     </div>
   </body>
