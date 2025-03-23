@@ -11,8 +11,8 @@
     "@codemirror/lint": "6.8.4",
     "@codemirror/merge": "6.7.4",
     "@codemirror/state": "6.5.2",
-    "@codemirror/view": "6.36.4",
-    "@jurjanpaul/codemirror6-parinfer": "0.0.12",
+    "@codemirror/view": "6.35.0",
+    "@jurjanpaul/codemirror6-parinfer": "0.0.13",
     "@nextjournal/lang-clojure": "1.0.0",
     "codemirror": "6.0.1"
   },
