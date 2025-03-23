@@ -13,7 +13,7 @@ Try it at [the demo page](https://jurjanpaul.github.io/codemirror6-parinfer/)!
 Please let me know if you have a use for this or have any feedback!
 
 ## Basic usage
-```
+```typescript
 import { basicSetup } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
