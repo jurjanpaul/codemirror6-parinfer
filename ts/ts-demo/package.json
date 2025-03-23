@@ -32,6 +32,6 @@
     "clean": "rimraf dist",
     "_build": "tsc",
     "build": "rimraf dist && node_modules/.bin/rollup --config rollup.config.js --configPlugin @rollup/plugin-typescript",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm install && npm run build"
   }
 }

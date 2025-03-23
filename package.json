@@ -50,6 +50,6 @@
     "clean": "rimraf dist",
     "_build": "tsc",
     "build": "rollup -c",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm install && npm run build"
   }
 }
