@@ -1,6 +1,7 @@
 import commonjs from "@rollup/plugin-commonjs"
 import {nodeResolve} from "@rollup/plugin-node-resolve"
 import dts from 'rollup-plugin-dts';
+import sourcemaps from 'rollup-plugin-sourcemaps';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import { assert } from "console";
@@ -28,7 +29,10 @@ export default [
       }
     ],
     plugins: [
-      typescript(),
+      typescript({
+        sourceMap: false,
+        inlineSources: true,
+      }),
       nodeResolve(),
       commonjs({
         ignore: ['assert'],
