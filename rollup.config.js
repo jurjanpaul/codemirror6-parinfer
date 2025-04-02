@@ -1,7 +1,6 @@
 import commonjs from "@rollup/plugin-commonjs"
 import {nodeResolve} from "@rollup/plugin-node-resolve"
 import dts from 'rollup-plugin-dts';
-import sourcemaps from 'rollup-plugin-sourcemaps';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import { assert } from "console";
@@ -19,19 +18,18 @@ export default [
       {
         file: 'dist/cm6-parinfer.js',
         format: 'esm',
-        sourcemap: true,
+        sourcemap: false
       },
       {
         file: 'dist/cm6-parinfer.min.js',
         format: 'esm',
         plugins: [terser()],
-        sourcemap: true,
+        sourcemap: false
       }
     ],
     plugins: [
       typescript({
         sourceMap: false,
-        inlineSources: true,
       }),
       nodeResolve(),
       commonjs({
