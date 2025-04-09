@@ -175,11 +175,16 @@ function maybeInitialize(transaction: Transaction, initialConfig: ParinferExtens
   return transaction
 }
 
+function needToApplyParinfer(tr: Transaction): boolean {
+ const aSetConfigEffect = filterTransactionEffects(setConfigEffect, tr).at(-1)
+ return (enabled(tr.startState) &&
+         (tr.docChanged) || tr.isUserEvent("select")) ||
+        (aSetConfigEffect && aSetConfigEffect.value.enabled) as boolean
+}
+
 function parinferTransactionFilter(initialConfig?: ParinferExtensionConfig) {
   return EditorState.transactionFilter.of(tr => {
-    const aSetConfigEffect = filterTransactionEffects(setConfigEffect, tr).at(-1)
-    if ((enabled(tr.startState) && tr.docChanged) ||
-        (aSetConfigEffect && aSetConfigEffect.value.enabled)) {
+    if (needToApplyParinfer(tr)) {
       const parinferChanges = applyParinferSmartWithDiff(tr)
       if (parinferChanges) {
         if (parinferChanges.effects || parinferChanges.changes) {

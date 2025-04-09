@@ -158,27 +158,31 @@
 
 (defn- maybe-initialize
   [transaction initial-config]
-  (if (not (.field (.-startState transaction) config-field false)) ; afraid of infinite loop, but try with startState anyway!
+  (if (not (.field (.-startState transaction) config-field false))
     #js[transaction
         #js{:effects (.of set-config-effect (merge default-config initial-config))}]
     transaction))
+
+(defn- need-to-apply-parinfer? [transaction]
+  (let [a-set-config-effect
+        (->> (filter-transaction-effects set-config-effect transaction) last)]
+    (or (and (enabled? (.-startState transaction))
+             (or (.-docChanged transaction)
+                 (.isUserEvent transaction "select")))
+        (and a-set-config-effect (:enabled? (.-value a-set-config-effect))))))
 
 (defn- parinfer-transaction-filter
   [initial-config]
   (.of (.-transactionFilter js/cm_state.EditorState)
        (fn [transaction]
-         (let [a-set-config-effect
-               (->> (filter-transaction-effects set-config-effect transaction) last)]
-           (if (or (and (enabled? (.-startState transaction))
-                        (.-docChanged transaction))
-                   (and a-set-config-effect (:enabled? (.-value a-set-config-effect))))
-             (let [{:keys [effects changes] :as parinfer-changes}
-                   (apply-parinfer-smart-with-diff transaction)]
-               (if (or effects (seq (js->clj changes)))
-                 #js[transaction
-                     (clj->js parinfer-changes)]
-                 transaction))
-             (maybe-initialize transaction initial-config))))))
+         (if (need-to-apply-parinfer? transaction)
+           (let [{:keys [effects changes] :as parinfer-changes}
+                 (apply-parinfer-smart-with-diff transaction)]
+             (if (or effects (seq (js->clj changes)))
+               #js[transaction
+                   (clj->js parinfer-changes)]
+               transaction))
+           (maybe-initialize transaction initial-config)))))
 
 (defn- error->diagnostics
   [doc {:strs [x lineNo extra message] :as _error}]
