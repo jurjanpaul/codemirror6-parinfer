@@ -187,7 +187,11 @@ function parinferTransactionFilter(initialConfig?: ParinferExtensionConfig) {
     if (needToApplyParinfer(tr)) {
       const parinferChanges = applyParinferSmartWithDiff(tr)
       if (parinferChanges) {
-        if (parinferChanges.effects || parinferChanges.changes) {
+        if (parinferChanges.effects ||
+            (parinferChanges.changes &&
+             (!Array.isArray(parinferChanges.changes) ||
+              parinferChanges.changes.length > 0))) {
+          console.log(parinferChanges)
           return [tr, parinferChanges]
         }
       }
