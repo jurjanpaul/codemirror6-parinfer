@@ -195,7 +195,6 @@ function parinferTransactionFilter(initialConfig?: ParinferExtensionConfig) {
             (parinferChanges.changes &&
              (!Array.isArray(parinferChanges.changes) ||
               parinferChanges.changes.length > 0))) {
-          console.log(parinferChanges)
           return [tr, parinferChanges]
         }
       }
