@@ -35,7 +35,8 @@
           "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.35.0/dist/index.js",
           "@codemirror/merge": "https://cdn.jsdelivr.net/npm/@codemirror/merge@6.7.4/dist/index.js",
           "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.2/src/style-mod.js",
-          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+          "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js",
+          "@jurjanpaul/codemirror6-clojure-smart-indent": "https://cdn.jsdelivr.net/npm/@jurjanpaul/codemirror6-clojure-smart-indent@0.1.0/dist/cm6-clj-smart-indent.js"
         }
       }
     </script>
@@ -48,6 +49,7 @@
       import * as cm_state from '@codemirror/state';
       import * as cm_merge from '@codemirror/merge';
       import * as lang_clojure from '@nextjournal/lang-clojure'
+      import * as codemirror6_clojure_smart_indent from '@jurjanpaul/codemirror6-clojure-smart-indent'
       globalThis.codemirror = codemirror;
       globalThis.cm_commands = cm_commands;
       globalThis.cm_language = cm_language;
@@ -56,6 +58,7 @@
       globalThis.cm_view = cm_view;
       globalThis.cm_merge = cm_merge;
       globalThis.lang_clojure = lang_clojure;
+      globalThis.codemirror6_clojure_smart_indent = codemirror6_clojure_smart_indent;
       scittle.core.eval_script_tags();
     </script>
     <script type="application/x-scittle" src="scittle-cm6-parinfer.cljs"></script>

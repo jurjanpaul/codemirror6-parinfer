@@ -90,7 +90,7 @@ Speaks for itself. Convenience wrapper for `configureParinfer`.<br><br>
 ## Out of scope (at least for the foreseeable future)
  - visualising/styling the [Paren Trail](https://github.com/parinfer/parinfer.js/blob/master/doc/code.md#paren-trail) that parinfer includes in its result;
  - visualising the `tabStops` that parinfer includes in its result;
- - smart indentation (does not really belong to Parinfer, but missed anyway, because outside the legacy Clojure mode there is no support for CodeMirror 6 yet).
+ - smart indentation (because that is now provided by the separate [CodeMirror 6 Clojure Smart Indentation extension](https://github.com/jurjanpaul/codemirror6-clojure-smart-indent)!).
 
 ## Motivation
 I had previously used CodeMirror 5 with Parinfer in the [Away from Preferred Editor ClojureScript Playground](https://github.com/jurjanpaul/ape-cljs-playground) and hoped to upgrade to CodeMirror 6 as soon as somebody would make a Parinfer extension available.

@@ -1,9 +1,10 @@
 import { basicSetup } from 'codemirror';
-import { indentUnit } from '@codemirror/language';
+import { indentUnit, indentService } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import type { ParinferMode } from '@jurjanpaul/codemirror6-parinfer';
 import { parinferExtension, switchMode, disableParinfer, enableParinfer } from '@jurjanpaul/codemirror6-parinfer';
+import { clojureSmartIndentExtension } from '@jurjanpaul/codemirror6-clojure-smart-indent';
 import { clojure } from '@nextjournal/lang-clojure';
 
 export function init(parent: HTMLElement, doc: string) {
@@ -13,7 +14,8 @@ export function init(parent: HTMLElement, doc: string) {
       extensions: [indentUnit.of(" "),
                    basicSetup,
                    clojure(),
-                   parinferExtension()],
+                   parinferExtension(),
+                   clojureSmartIndentExtension(indentService)],
     }),
     parent: parent
   })
