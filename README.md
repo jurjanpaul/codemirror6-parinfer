@@ -28,7 +28,7 @@ new EditorView({
     doc,
     extensions: [basicSetup, parinferExtension()],
   }),
-  parent: document.getElementById("editor");
+  parent: document.getElementById("editor")
 });
 ```
 
